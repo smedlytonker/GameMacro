@@ -13,6 +13,8 @@ using namespace GameMacro;
 
 int main(array<String^>^ args)
 {
+	WorkerThread workerThread;
+
 	if (workerThread.Create())
 	{
 		Application::EnableVisualStyles();
