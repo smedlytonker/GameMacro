@@ -1,9 +1,7 @@
 #pragma once
 
-#include <string>
-#include <regex>
-#include <msclr\marshal_cppstd.h>
 #include "KeySettings.h"
+#include <msclr\marshal_cppstd.h>
 
 using namespace System;
 using namespace msclr::interop;

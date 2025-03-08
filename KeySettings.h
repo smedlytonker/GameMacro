@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <regex>
 #include <vector>
 #include <map>
 #include <shared_mutex>

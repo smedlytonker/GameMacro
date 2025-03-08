@@ -1,25 +1,6 @@
-#include <Windows.h>
 #include "WorkerThread.h"
-#include "KeySettings.h"
 
 #pragma comment(lib, "User32.lib")
-
-struct KeyPressed {
-	uint8_t keyCode = 0;
-	const char* name = NULL;
-	bool bCapital = false;
-	bool bNumLock = false;
-	bool bScrollLock = false;
-	bool bInsert = false;
-	bool bLeftShift = false;
-	bool bRightShift = false;
-	bool bLeftCtrl = false;
-	bool bRightCtrl = false;
-	bool bLeftAlt = false;
-	bool bRightAlt = false;
-	bool bLeftWKey = false;
-	bool bRightWKey = false;
-};
 
 bool WorkerThread::Create()
 {
@@ -49,7 +30,7 @@ bool WorkerThread::Destroy()
 
 void WorkerThread::Work(WorkerThread* pThis)
 {
-	if (pThis != NULL)
+	if (pThis != nullptr)
 	{
 		while (pThis->m_bContinue)
 		{
@@ -105,7 +86,8 @@ void WorkerThread::DoWork()
 
 #ifdef _DEBUG
 						char szDbg[128] = { 0 };
-						sprintf(szDbg, "Key(%u)(%u, %u, %u, %u)(%u, %u)(%u, %u)(%u, %u)[%u, %u]: %s\r\n",
+						sprintf_s(szDbg, _countof(szDbg) - 1, 
+							"Key(%u)(%u, %u, %u, %u)(%u, %u)(%u, %u)(%u, %u)[%u, %u]: %s\r\n",
 							key.keyCode,
 							key.bCapital, key.bNumLock, key.bScrollLock, key.bInsert,
 							key.bLeftShift, key.bRightShift,

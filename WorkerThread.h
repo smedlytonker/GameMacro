@@ -1,12 +1,29 @@
 #pragma once
 
-#include <stack>
+#include "KeySettings.h"
 #include <thread>
-#include <shared_mutex>
-#include <vector>
 
 class WorkerThread
 {
+private:
+	struct KeyPressed
+	{
+		uint8_t keyCode = 0;
+		const char* name = nullptr;
+		bool bCapital = false;
+		bool bNumLock = false;
+		bool bScrollLock = false;
+		bool bInsert = false;
+		bool bLeftShift = false;
+		bool bRightShift = false;
+		bool bLeftCtrl = false;
+		bool bRightCtrl = false;
+		bool bLeftAlt = false;
+		bool bRightAlt = false;
+		bool bLeftWKey = false;
+		bool bRightWKey = false;
+	};
+
 public:
 	bool Create();
 	bool Destroy();

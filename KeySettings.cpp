@@ -1,4 +1,3 @@
-#include <Windows.h>
 #include "KeySettings.h"
 
 #define MAX_KEYS 30
@@ -10,7 +9,7 @@ bool KeySettings::Init(char* fileNameOnly)
 	bool ret = false;
 
 	WCHAR path[MAX_PATH] = { 0 };
-	if (GetModuleFileName(NULL, path, MAX_PATH))
+	if (GetModuleFileName(nullptr, path, MAX_PATH))
 	{
 		LPTSTR pStrPos = wcsrchr(path, '\\');
 		if (pStrPos)
@@ -43,7 +42,8 @@ bool KeySettings::ParseSection(CSimpleIniA& ini, MacroKey& key, const char* sect
 
 	for (int i = 1; i < MAX_KEYS; i++)
 	{
-		const char* pKey = _itoa(i, szBuff, 10);
+		_itoa_s(i, szBuff, _countof(szBuff) - 1, 10);
+		const char* pKey = szBuff;
 		const char* pValue = ini.GetValue(sectionName, pKey, "");
 		if (*pValue == NULL)
 		{
@@ -52,24 +52,27 @@ bool KeySettings::ParseSection(CSimpleIniA& ini, MacroKey& key, const char* sect
 		else
 		{
 			char szTmp[64] = { 0 };
-			strncpy(szTmp, pValue, _countof(szTmp) - 1);
-			char* pKey = strtok(szTmp, ",");
-			if (pKey != NULL)
+			strncpy_s(szTmp, _countof(szTmp) - 1, pValue, _countof(szTmp) - 1);
+
+			//_CRT_SECURE_NO_WARNINGS;
+			char* tokenPos = nullptr;
+			char* pKey = strtok_s(szTmp, ",", &tokenPos);
+			if (pKey != nullptr)
 			{
-				char* pDelay = strtok(NULL, ",");
-				if (pDelay != NULL)
+				char* pDelay = strtok_s(nullptr, ",", &tokenPos);
+				if (pDelay != nullptr)
 				{
-					char* pCtrl = strtok(NULL, ",");
-					if (pCtrl != NULL)
+					char* pCtrl = strtok_s(nullptr, ",", &tokenPos);
+					if (pCtrl != nullptr)
 					{
-						char* pAlt = strtok(NULL, ",");
-						if (pAlt != NULL)
+						char* pAlt = strtok_s(nullptr, ",", &tokenPos);
+						if (pAlt != nullptr)
 						{
-							char* pShift = strtok(NULL, ",");
-							if (pShift != NULL)
+							char* pShift = strtok_s(nullptr, ",", &tokenPos);
+							if (pShift != nullptr)
 							{
-								char* pWKey = strtok(NULL, ",");
-								if (pWKey != NULL)
+								char* pWKey = strtok_s(nullptr, ",", &tokenPos);
+								if (pWKey != nullptr)
 								{
 									PlaybackKey playbackKey;
 									playbackKey.keyCode   = (uint8_t)atoi(pKey);
@@ -195,11 +198,10 @@ bool KeySettings::AddMacroKey(MacroKey& macroKey)
 	{
 		if (m_macroKeys.size() < MAX_KEYS)
 		{
-			
 			char szSection[32] = { 0 };
-			_itoa(macroKey.keyCode, szSection, 10);
+			_itoa_s(macroKey.keyCode, szSection, _countof(szSection) - 1, 10);
 
-			m_ini.Delete(szSection, NULL, true);
+			m_ini.Delete(szSection, nullptr, true);
 			m_ini.SetBoolValue(szSection, "Loop", macroKey.bLoop);
 
 			uint8_t nPlaybackKeys = 1;
@@ -208,12 +210,12 @@ bool KeySettings::AddMacroKey(MacroKey& macroKey)
 				if (nPlaybackKeys <= MAX_KEYS)
 				{
 					char szKey[32] = { 0 };
-					char szTmp[64] = { 0 };
-
-					_itoa(nPlaybackKeys, szKey, 10);
+					_itoa_s(nPlaybackKeys, szKey, _countof(szKey) - 1, 10);
 					nPlaybackKeys++;
 
-					sprintf(szTmp, "%u,%u,%u,%u,%u,%u",
+					char szTmp[64] = { 0 };
+					sprintf_s(szTmp, _countof(szTmp) - 1, 
+						"%u,%u,%u,%u,%u,%u",
 						playbackKey.keyCode,
 						playbackKey.delayInMS,
 						playbackKey.bCtrl,
@@ -258,8 +260,8 @@ bool KeySettings::DeleteMacroKey(uint8_t keyCode)
 		m_macroKeys.erase(it);
 
 		char szSection[32] = { 0 };
-		_itoa(keyCode, szSection, 10);
-		m_ini.Delete(szSection, NULL, true);
+		_itoa_s(keyCode, szSection, _countof(szSection) - 1, 10);
+		m_ini.Delete(szSection, nullptr, true);
 
 		SI_Error rc = m_ini.SaveFile(m_fullPathToFile, false);
 		if (rc == SI_OK)
@@ -296,8 +298,10 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 				for (PlaybackKey& playbackKey : macroKey.keys)
 				{
 					playbackKey.name = DecodeKey(playbackKey.keyCode);
-					playbackKey.keyCodeStr = _itoa(playbackKey.keyCode, szTmp, 10);
-					playbackKey.delayInMSStr = _itoa(playbackKey.delayInMS, szTmp, 10);
+					_itoa_s(playbackKey.keyCode, szTmp, _countof(szTmp) - 1, 10);
+					playbackKey.keyCodeStr = szTmp;
+					_itoa_s(playbackKey.delayInMS, szTmp, _countof(szTmp) - 1, 10);
+					playbackKey.delayInMSStr = szTmp;
 				}
 			}
 
@@ -319,7 +323,8 @@ bool KeySettings::GetMacroKeyList(std::vector<KeyInList>& keys)
 	{
 		KeyInList key;
 		key.keyCode = macroKey.second.keyCode;
-		key.keyCodeStr = _itoa(key.keyCode, szTmp, 10);
+		_itoa_s(key.keyCode, szTmp, _countof(szTmp) - 1, 10);
+		key.keyCodeStr = szTmp;
 		key.name = keyCodeArray[key.keyCode].name;
 		keys.push_back(key);
 		ret = true;
@@ -394,7 +399,8 @@ bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 				{
 					char szTmp[32] = { 0 };
 					playbackKey = macroKey.keys[playbackKeyVectorIdx];
-					playbackKey.keyCodeStr = _itoa(playbackKey.keyCode, szTmp, 10);
+					_itoa_s(playbackKey.keyCode, szTmp, _countof(szTmp) - 1, 10);
+					playbackKey.keyCodeStr = szTmp;
 					playbackKey.name = keyCodeArray[playbackKey.keyCode].name;
 				}
 				catch (const std::out_of_range& e)
