@@ -6,7 +6,7 @@ bool WorkerThread::Create()
 {
 	bool ret = false;
 
-	if (settings.Init("Keys.ini"))
+	if (globalSettings.Init("Keys.ini"))
 	{
 		m_bContinue = true;
 		m_thread = std::make_shared<std::thread>(Work, this);
@@ -40,6 +40,52 @@ void WorkerThread::Work(WorkerThread* pThis)
 	}
 }
 
+void WorkerThread::DebugKeyPressed(uint8_t keyCode, uint8_t keyboardState[])
+{
+#ifndef _DEBUG
+	UNREFERENCED_PARAMETER(keyCode);
+	UNREFERENCED_PARAMETER(keyboardState);
+#else
+	KeyPressed key = { 0 };
+	key.name = globalSettings.DecodeKey(keyCode);
+	key.keyCode = keyCode;
+
+	//Toggle keys
+	if (keyboardState[VK_CAPITAL] & 0x01) key.bCapital = true;
+	if (keyboardState[VK_NUMLOCK] & 0x01) key.bNumLock = true;
+	if (keyboardState[VK_SCROLL] & 0x01) key.bScrollLock = true;
+	if (keyboardState[VK_INSERT] & 0x01) key.bInsert = true;
+
+	// Keys that can be held down with other keys
+	if (keyboardState[VK_LSHIFT] & 0x80) key.bLeftShift = true;
+	if (keyboardState[VK_RSHIFT] & 0x80) key.bRightShift = true;
+	if (keyboardState[VK_LCONTROL] & 0x80) key.bLeftCtrl = true;
+	if (keyboardState[VK_RCONTROL] & 0x80) key.bRightCtrl = true;
+	if (keyboardState[VK_LMENU] & 0x80) key.bLeftAlt = true;
+	if (keyboardState[VK_RMENU] & 0x80) key.bRightAlt = true;
+	if (keyboardState[VK_LWIN] & 0x80) key.bLeftWKey = true;
+	if (keyboardState[VK_RWIN] & 0x80) key.bRightWKey = true;
+
+	char szDbg[128] = { 0 };
+	sprintf_s(szDbg, _countof(szDbg) - 1,
+		"Key(%u)(%u, %u, %u, %u)(%u, %u)(%u, %u)(%u, %u)[%u, %u]: %s\r\n",
+		key.keyCode,
+		key.bCapital, key.bNumLock, key.bScrollLock, key.bInsert,
+		key.bLeftShift, key.bRightShift,
+		key.bLeftCtrl, key.bRightCtrl,
+		key.bLeftAlt, key.bRightAlt,
+		key.bLeftWKey, key.bRightWKey,
+		key.name);
+
+	OutputDebugStringA(szDbg);
+#endif
+}
+
+void WorkerThread::ProcessMacroKey(KeySettings::MacroKey macroKey)
+	{
+
+	}
+
 void WorkerThread::DoWork()
 {
 	static uint8_t _keyboardState[256] = { 0 };
@@ -62,49 +108,25 @@ void WorkerThread::DoWork()
 				// bitwise and with 0x80
 				if (keyboardState[i] & 0x80)
 				{
-					if (settings.IsValidMacroKey(i))
+					if (globalSettings.IsActiveMacroKey(i))
 					{
-						KeyPressed key = { 0 };
-						key.name = settings.DecodeKey(i);
-						key.keyCode = i;
-
-						//Toggle keys
-						if (keyboardState[VK_CAPITAL]  & 0x01) key.bCapital    = true;
-						if (keyboardState[VK_NUMLOCK]  & 0x01) key.bNumLock    = true;
-						if (keyboardState[VK_SCROLL]   & 0x01) key.bScrollLock = true;
-						if (keyboardState[VK_INSERT]   & 0x01) key.bInsert     = true;
-
-						// Keys that can be held down with other keys
-						if (keyboardState[VK_LSHIFT]   & 0x80) key.bLeftShift  = true;
-						if (keyboardState[VK_RSHIFT]   & 0x80) key.bRightShift = true;
-						if (keyboardState[VK_LCONTROL] & 0x80) key.bLeftCtrl   = true;
-						if (keyboardState[VK_RCONTROL] & 0x80) key.bRightCtrl  = true;
-						if (keyboardState[VK_LMENU]    & 0x80) key.bLeftAlt    = true;
-						if (keyboardState[VK_RMENU]    & 0x80) key.bRightAlt   = true;
-						if (keyboardState[VK_LWIN]     & 0x80) key.bLeftWKey   = true;
-						if (keyboardState[VK_RWIN]     & 0x80) key.bRightWKey  = true;
-
-#ifdef _DEBUG
-						char szDbg[128] = { 0 };
-						sprintf_s(szDbg, _countof(szDbg) - 1, 
-							"Key(%u)(%u, %u, %u, %u)(%u, %u)(%u, %u)(%u, %u)[%u, %u]: %s\r\n",
-							key.keyCode,
-							key.bCapital, key.bNumLock, key.bScrollLock, key.bInsert,
-							key.bLeftShift, key.bRightShift,
-							key.bLeftCtrl, key.bRightCtrl,
-							key.bLeftAlt, key.bRightAlt,
-							key.bLeftWKey, key.bRightWKey,
-							key.name);
-
-						OutputDebugStringA(szDbg);
-#endif
+						DebugKeyPressed(i, keyboardState); // This is only needed for debug
 
 						KeySettings::MacroKey macroKey;
-						if (settings.GetMacroKey(key.keyCode, macroKey, true))
+						if (!globalSettings.GetMacroKey(i, macroKey, true))
 						{
-							// user pressed a macro key
-							break; // can stop looking now
+							// Error - 'globalSettings.m_macroKeys' & 'globalSettings.macroIsActive' 
+							// should match
 						}
+						else
+						{
+							// User pressed a macro key
+
+							ProcessMacroKey(macroKey);
+						}
+
+						// Don't need to look for more keys
+						break;
 					}
 				}
 			}

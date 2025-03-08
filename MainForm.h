@@ -135,7 +135,7 @@ namespace GameMacro {
 			macroList->Items->Clear();
 
 			std::vector<KeySettings::KeyInList> keys;
-			if (settings.GetMacroKeyList(keys))
+			if (globalSettings.GetMacroKeyList(keys))
 			{
 				for (auto key : keys)
 				{

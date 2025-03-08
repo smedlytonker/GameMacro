@@ -2,7 +2,7 @@
 
 #define MAX_KEYS 30
 
-KeySettings settings;
+KeySettings globalSettings;
 
 bool KeySettings::Init(char* fileNameOnly)
 {
@@ -16,6 +16,8 @@ bool KeySettings::Init(char* fileNameOnly)
 		{
 			*pStrPos = NULL; // Strip filename - get just the path
 
+			// Assume that the .ini file is in the same folder as 
+			// this program is running from
 			wsprintf(m_fullPathToFile, L"%s\\%S", path, fileNameOnly);
 			
 			SI_Error rc = m_ini.LoadFile(m_fullPathToFile);
@@ -104,7 +106,8 @@ bool KeySettings::ParseIni(CSimpleIniA& ini)
 	bool ret = false;
 
 	m_macroKeys.clear();
-
+	memset(m_macroIsActive, 0, sizeof(m_macroIsActive));
+	
 	CSimpleIniA::TNamesDepend sections;
 	ini.GetAllSections(sections);
 	for (auto& section : sections)
@@ -117,6 +120,7 @@ bool KeySettings::ParseIni(CSimpleIniA& ini)
 			if (ParseSection(ini, macroKey, section.pItem))
 			{
 				m_macroKeys[macroKey.keyCode] = macroKey;
+				m_macroIsActive[macroKey.keyCode] = 1;
 			}
 
 			ret = true;
@@ -228,6 +232,8 @@ bool KeySettings::AddMacroKey(MacroKey& macroKey)
 			}
 
 			m_macroKeys[macroKey.keyCode] = macroKey;
+			m_macroIsActive[macroKey.keyCode] = 1;
+
 			ret = true;
 		}
 	}
@@ -258,6 +264,7 @@ bool KeySettings::DeleteMacroKey(uint8_t keyCode)
 	if (it != m_macroKeys.end())
 	{
 		m_macroKeys.erase(it);
+		m_macroIsActive[keyCode] = 0;
 
 		char szSection[32] = { 0 };
 		_itoa_s(keyCode, szSection, _countof(szSection) - 1, 10);
@@ -273,9 +280,13 @@ bool KeySettings::DeleteMacroKey(uint8_t keyCode)
 	return ret;
 }
 
-bool KeySettings::IsValidMacroKey(uint8_t keyCode)
+bool KeySettings::IsActiveMacroKey(uint8_t keyCode)
 {
-	return keyCodeArray[keyCode].bMacroValid;
+	// This is a lookup table is faster than looking up the macro in a std::map
+	// because the map has to be protected with a mutex. So this should lower the 
+	// overhead of checking
+
+	return (m_macroIsActive[keyCode] > 0) ? true : false;
 }
 
 bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecode)
@@ -290,6 +301,8 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 		if (it != m_macroKeys.end())
 		{
 			macroKey = it->second;
+			m_macroIsActive[keyCode] = 1;
+			ret = true;
 			
 			if (!bNoDecode)
 			{
@@ -304,8 +317,6 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 					playbackKey.delayInMSStr = szTmp;
 				}
 			}
-
-			ret = true;
 		}
 	}
 
@@ -337,11 +348,12 @@ bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 {
 	bool ret = false;
 
-	std::unique_lock<std::shared_mutex> lock(protectSettings);
-
 	MacroKey macroKey;
 	if (GetMacroKey(macroKeyCode, macroKey))
 	{
+		// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
+		std::unique_lock<std::shared_mutex> lock(protectSettings);
+
 		playbackKey.name = keyCodeArray[playbackKey.keyCode].name;
 
 		if (playbackKeyVectorIdx < 0)
@@ -373,6 +385,7 @@ bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 		{
 			// Need to replace only macro key entry with new one
 			m_macroKeys[macroKeyCode] = macroKey;
+			m_macroIsActive[macroKeyCode] = 1;
 		}
 	}
 
@@ -383,13 +396,15 @@ bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 {
 	bool ret = false;
 
-	std::unique_lock<std::shared_mutex> lock(protectSettings);
 
 	if(playbackKeyVectorIdx >= 0)
 	{
 		MacroKey macroKey;
 		if (GetMacroKey(macroKeyCode, macroKey))
 		{
+			// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
+			std::unique_lock<std::shared_mutex> lock(protectSettings);
+
 			// playbackKeyVectorIdx is a zero based index and must be less
 			// then the number of items in the vector by 1
 			int numberOfPlaybackKeys = (int) macroKey.keys.size();
@@ -421,11 +436,12 @@ bool KeySettings::DeletePlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorI
 {
 	bool ret = false;
 
-	std::unique_lock<std::shared_mutex> lock(protectSettings);
-
 	MacroKey macroKey;
 	if (GetMacroKey(macroKeyCode, macroKey))
 	{
+		// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
+		std::unique_lock<std::shared_mutex> lock(protectSettings);
+
 		if (playbackKeyVectorIdx >= 0)
 		{
 			// playbackKeyVectorIdx is a zero based index and must be less
@@ -450,6 +466,7 @@ bool KeySettings::DeletePlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorI
 		{
 			// Need to replace only macro key entry with new one
 			m_macroKeys[macroKeyCode] = macroKey;
+			m_macroIsActive[macroKeyCode] = 1;
 		}
 	}
 

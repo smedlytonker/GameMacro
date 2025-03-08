@@ -52,7 +52,7 @@ public:
 	bool GetMacroKeyList(std::vector<KeyInList>& list);
 	bool AddMacroKey(MacroKey& macroKey);
 	bool DeleteMacroKey(uint8_t keyCode);
-	bool IsValidMacroKey(uint8_t keyCode);
+	bool IsActiveMacroKey(uint8_t keyCode);
 	bool GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecode = false);
 
 	bool GetPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx, PlaybackKey& playbackKey);
@@ -71,6 +71,8 @@ private:
 	// Can't use std::mutex because I'm compiling with /clr option.
 	// https://developercommunity.visualstudio.com/t/shared-mutex-and-clr/469913
 	std::shared_mutex protectSettings;
+
+	uint8_t m_macroIsActive[256] = { 0 };
 
 	struct KeyLookUp
 	{
@@ -339,4 +341,4 @@ private:
 		{ 0xFF, "Reserved", 0, 0} };
 };
 
-extern KeySettings settings;
+extern KeySettings globalSettings;

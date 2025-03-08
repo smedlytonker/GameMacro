@@ -32,6 +32,8 @@ protected:
 	static void Work(WorkerThread* pThis);
 private:
 	void DoWork();
+	void DebugKeyPressed(uint8_t keyCode, uint8_t keyboardState[]);
+	void ProcessMacroKey(KeySettings::MacroKey macroKey);
 
 public:
 	bool m_bContinue = false;

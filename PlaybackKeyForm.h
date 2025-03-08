@@ -49,6 +49,9 @@ namespace GameMacro {
 	private: System::Windows::Forms::CheckBox^ checkBoxShift;
 	private: System::Windows::Forms::CheckBox^ checkBoxWindows;
 	private: System::Windows::Forms::Button^ addUpdateButton;
+	private: System::Windows::Forms::ErrorProvider^ errorProviderDelay;
+	private: System::Windows::Forms::ErrorProvider^ errorProviderKey;
+	private: System::ComponentModel::IContainer^ components;
 
 	protected:
 
@@ -56,7 +59,7 @@ namespace GameMacro {
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container ^components;
+
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -65,6 +68,7 @@ namespace GameMacro {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->components = (gcnew System::ComponentModel::Container());
 			this->playbackKeyList = (gcnew System::Windows::Forms::ComboBox());
 			this->deleteButton = (gcnew System::Windows::Forms::Button());
 			this->textBoxDelay = (gcnew System::Windows::Forms::TextBox());
@@ -74,6 +78,10 @@ namespace GameMacro {
 			this->checkBoxShift = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxWindows = (gcnew System::Windows::Forms::CheckBox());
 			this->addUpdateButton = (gcnew System::Windows::Forms::Button());
+			this->errorProviderDelay = (gcnew System::Windows::Forms::ErrorProvider(this->components));
+			this->errorProviderKey = (gcnew System::Windows::Forms::ErrorProvider(this->components));
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->errorProviderDelay))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->errorProviderKey))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// playbackKeyList
@@ -83,13 +91,14 @@ namespace GameMacro {
 			this->playbackKeyList->FormattingEnabled = true;
 			this->playbackKeyList->Location = System::Drawing::Point(17, 16);
 			this->playbackKeyList->Name = L"playbackKeyList";
-			this->playbackKeyList->Size = System::Drawing::Size(440, 40);
+			this->playbackKeyList->Size = System::Drawing::Size(472, 40);
 			this->playbackKeyList->TabIndex = 1;
+			this->playbackKeyList->SelectionChangeCommitted += gcnew System::EventHandler(this, &PlaybackKeyForm::playbackKeyList_SelectionChangeCommitted);
 			// 
 			// deleteButton
 			// 
 			this->deleteButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->deleteButton->Location = System::Drawing::Point(443, 275);
+			this->deleteButton->Location = System::Drawing::Point(448, 275);
 			this->deleteButton->Name = L"deleteButton";
 			this->deleteButton->Size = System::Drawing::Size(184, 51);
 			this->deleteButton->TabIndex = 3;
@@ -100,7 +109,7 @@ namespace GameMacro {
 			// textBoxDelay
 			// 
 			this->textBoxDelay->Anchor = System::Windows::Forms::AnchorStyles::Left;
-			this->textBoxDelay->Location = System::Drawing::Point(171, 167);
+			this->textBoxDelay->Location = System::Drawing::Point(176, 167);
 			this->textBoxDelay->Name = L"textBoxDelay";
 			this->textBoxDelay->Size = System::Drawing::Size(157, 35);
 			this->textBoxDelay->TabIndex = 4;
@@ -110,7 +119,7 @@ namespace GameMacro {
 			// 
 			this->labelDelay->Anchor = System::Windows::Forms::AnchorStyles::Left;
 			this->labelDelay->AutoSize = true;
-			this->labelDelay->Location = System::Drawing::Point(12, 167);
+			this->labelDelay->Location = System::Drawing::Point(17, 167);
 			this->labelDelay->Name = L"labelDelay";
 			this->labelDelay->Size = System::Drawing::Size(153, 29);
 			this->labelDelay->TabIndex = 5;
@@ -171,11 +180,19 @@ namespace GameMacro {
 			this->addUpdateButton->UseVisualStyleBackColor = true;
 			this->addUpdateButton->Click += gcnew System::EventHandler(this, &PlaybackKeyForm::addUpdateButton_Click);
 			// 
+			// errorProviderDelay
+			// 
+			this->errorProviderDelay->ContainerControl = this;
+			// 
+			// errorProviderKey
+			// 
+			this->errorProviderKey->ContainerControl = this;
+			// 
 			// PlaybackKeyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(14, 28);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(639, 338);
+			this->ClientSize = System::Drawing::Size(649, 338);
 			this->Controls->Add(this->addUpdateButton);
 			this->Controls->Add(this->checkBoxWindows);
 			this->Controls->Add(this->checkBoxShift);
@@ -191,6 +208,8 @@ namespace GameMacro {
 			this->Name = L"PlaybackKeyForm";
 			this->Text = L"Playback Key";
 			this->Load += gcnew System::EventHandler(this, &PlaybackKeyForm::PlaybackKeyForm_Load);
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->errorProviderDelay))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->errorProviderKey))->EndInit();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -204,7 +223,8 @@ namespace GameMacro {
 		{
 			if (playbackKeyList->SelectedIndex < 0)
 			{
-				MessageBox::Show("No key selected");
+				errorProviderKey->SetError(playbackKeyList, "No key selected");
+				playbackKeyList->Focus();
 				return;
 			}
 
@@ -213,41 +233,45 @@ namespace GameMacro {
 
 			if (item->keyCode == 0)
 			{
-				MessageBox::Show("Need to select a playback key");
+				errorProviderKey->SetError(playbackKeyList, "No key selected");
+				playbackKeyList->Focus();
 				return;
 			}
 
 			playbackKey.delayInMSStr = ConvertToUnmanagedString(textBoxDelay->Text);
 			if (playbackKey.delayInMSStr.empty())
 			{
-				MessageBox::Show("Delay value is blank");
+				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value");
+				textBoxDelay->Focus();
 				return;
 			}
 
 			playbackKey.delayInMSStr = std::regex_replace(playbackKey.delayInMSStr, std::regex("[^0-9]"), "");
 			if (playbackKey.delayInMSStr.empty())
 			{
-				MessageBox::Show("Delay value is blank");
+				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value");
+				textBoxDelay->Focus();
 				return;
 			}
 
 			playbackKey.delayInMS = (uint16_t)std::stoi(playbackKey.delayInMSStr);
 			if ((playbackKey.delayInMS == 0) || (playbackKey.delayInMS > 30000))
 			{
-				MessageBox::Show("Delay value is invalid");
+				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value");
+				textBoxDelay->Focus();
 				return;
 			}
 
 			if (m_playbackKeyVectorIdx > 0)
 			{
-				if (settings.GetPlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx, playbackKey))
+				if (globalSettings.GetPlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx, playbackKey))
 				{
 					// Gets the orginal key
 				}
 				else
 				{
 					// This should not happen
-					// If it does tread it as new key
+					// If it does treat it as new key
 					m_playbackKeyVectorIdx = -1;
 				}
 			}
@@ -258,7 +282,7 @@ namespace GameMacro {
 			playbackKey.bShift  = checkBoxShift->Checked;
 			playbackKey.bWKey   = checkBoxWindows->Checked;
 			
-			if (settings.AddPlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx, playbackKey))
+			if (globalSettings.AddPlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx, playbackKey))
 			{
 				DialogResult = System::Windows::Forms::DialogResult::OK;
 				Close();
@@ -275,12 +299,17 @@ namespace GameMacro {
 			}
 			else
 			{
-				if (settings.DeletePlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx))
+				if (globalSettings.DeletePlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx))
 				{
 					DialogResult = System::Windows::Forms::DialogResult::OK;
 					Close();
 				}
 			}
+		}
+
+		private: System::Void playbackKeyList_SelectionChangeCommitted(System::Object^ sender, System::EventArgs^ e)
+		{
+			errorProviderKey->SetError(playbackKeyList, "");
 		}
 
 		private: System::Void textBoxDelay_TextChanged(System::Object^ sender, System::EventArgs^ e) 
@@ -293,6 +322,9 @@ namespace GameMacro {
 			{
 				textBoxDelay->Text = ConvertToManagedString(nonNumericCharactersRemoved);
 			}
+
+			if(String::IsNullOrWhiteSpace(textBoxDelay->Text))
+				errorProviderDelay->SetError(textBoxDelay, "");
 		}
 
 		private: void Redraw(int playbackKeyVectorIdx)
@@ -304,7 +336,7 @@ namespace GameMacro {
 				if (playbackKeyVectorIdx >= 0)
 				{
 					KeySettings::PlaybackKey playbackKey;
-					if (settings.GetPlaybackKey(m_macroKeyCode, playbackKeyVectorIdx, playbackKey))
+					if (globalSettings.GetPlaybackKey(m_macroKeyCode, playbackKeyVectorIdx, playbackKey))
 					{
 						keyCodeOfPlaybackKey = playbackKey.keyCode;
 						checkBoxCtrl->Checked = playbackKey.bCtrl;
@@ -316,7 +348,7 @@ namespace GameMacro {
 				}
 
 				std::vector<KeySettings::KeyInList> keys;
-				if (settings.GetAvialablePlaybackKeys(keys))
+				if (globalSettings.GetAvialablePlaybackKeys(keys))
 				{
 					playbackKeyList->Items->Clear();
 
@@ -340,6 +372,6 @@ namespace GameMacro {
 		{
 			Redraw(m_playbackKeyVectorIdx);
 		}
-
+		
 	};
 }
