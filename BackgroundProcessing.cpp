@@ -57,7 +57,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 {
 	uint32_t startPlayback = 0;
 	uint8_t  keyIndex      = 0;
-	size_t   nKeys         = macroKey.keys.size();
+	uint8_t  nKeys         = (uint8_t) macroKey.keys.size();
 	uint8_t  macroKeyCode  = 0;
 
 #ifdef _DEBUG
@@ -88,6 +88,9 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 		}
 		else
 		{
+			// I don't want to use the 64 bit version of GetTickCount
+			#pragma warning( disable : 28159)
+
 			uint32_t elapsed = GetTickCount() - startPlayback;
 			if (elapsed >= macroKey.keys[keyIndex].delayInMS)
 			{

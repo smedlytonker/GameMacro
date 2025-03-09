@@ -9,7 +9,7 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Settings">
+    <Filter Include=".Ini Library">
       <UniqueIdentifier>{5db86287-3f72-4242-819c-bf587cb1d768}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -21,7 +21,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SimpleIni\ConvertUTF.cpp">
-      <Filter>Settings</Filter>
+      <Filter>.Ini Library</Filter>
     </ClCompile>
     <ClCompile Include="KeySettings.cpp">
       <Filter>Source Files</Filter>
@@ -35,10 +35,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SimpleIni\ConvertUTF.h">
-      <Filter>Settings</Filter>
+      <Filter>.Ini Library</Filter>
     </ClInclude>
     <ClInclude Include="SimpleIni\SimpleIni.h">
-      <Filter>Settings</Filter>
+      <Filter>.Ini Library</Filter>
     </ClInclude>
     <ClInclude Include="MacroKeyForm.h">
       <Filter>Header Files</Filter>
