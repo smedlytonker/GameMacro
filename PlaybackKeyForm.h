@@ -51,6 +51,7 @@ namespace GameMacro {
 	private: System::Windows::Forms::Button^ addUpdateButton;
 	private: System::Windows::Forms::ErrorProvider^ errorProviderDelay;
 	private: System::Windows::Forms::ErrorProvider^ errorProviderKey;
+
 	private: System::ComponentModel::IContainer^ components;
 
 	protected:

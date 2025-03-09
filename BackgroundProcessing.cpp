@@ -2,6 +2,8 @@
 
 #pragma comment(lib, "User32.lib")
 
+#define SLEEP_TIME_IN_MS 1
+
 bool BackgroundProcessing::Create()
 {
 	bool ret = false;
@@ -32,11 +34,7 @@ void BackgroundProcessing::Work(BackgroundProcessing* pThis)
 {
 	if (pThis != nullptr)
 	{
-		while (pThis->m_bContinue)
-		{
-			pThis->DoWork();
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		}
+		pThis->DoWork();
 	}
 }
 
@@ -54,11 +52,17 @@ void BackgroundProcessing::PlayKey(KeySettings::PlaybackKey key)
 
 uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 {
-	const uint8_t delayInMS     = 1;
-	uint32_t      startPlayback = 0;
-	uint8_t       keyIndex      = 0;
-	size_t        nKeys         = macroKey.keys.size();
-	uint8_t       macroKeyCode  = 0;
+	uint32_t startPlayback = 0;
+	uint8_t  keyIndex      = 0;
+	size_t   nKeys         = macroKey.keys.size();
+	uint8_t  macroKeyCode  = 0;
+
+#ifdef _DEBUG
+	char szDbg[128] = { 0 };
+	const char* name = globalSettings.DecodeKey(macroKey.keyCode);
+	sprintf_s(szDbg, _countof(szDbg) - 1, "Macro started: %s\r\n", name);
+	OutputDebugStringA(szDbg);
+#endif
 
 	while (m_bContinue && (keyIndex < nKeys))
 	{
@@ -96,7 +100,8 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 		}
 		else
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(delayInMS));
+			std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_IN_MS));
+
 			macroKeyCode = MacroKeyWasPressed();
 			if (macroKeyCode != 0)
 			{
@@ -223,17 +228,22 @@ uint8_t BackgroundProcessing::MacroKeyWasPressed()
 
 void BackgroundProcessing::DoWork()
 {
-	uint8_t macroKeyCode = MacroKeyWasPressed();
-	
-	while(macroKeyCode != 0)
+	while (m_bContinue)
 	{
-		KeySettings::MacroKey macroKey;
-		if (globalSettings.GetMacroKey(macroKeyCode, macroKey, true))
+		uint8_t macroKeyCode = MacroKeyWasPressed();
+
+		while (macroKeyCode != 0)
 		{
-			if (macroKey.keys.size() > 0) // Macros need keys to playback
+			KeySettings::MacroKey macroKey;
+			if (globalSettings.GetMacroKey(macroKeyCode, macroKey, true))
 			{
-				macroKeyCode = ProcessMacroKey(macroKey);
+				if (macroKey.keys.size() > 0) // Macros need keys to playback
+				{
+					macroKeyCode = ProcessMacroKey(macroKey);
+				}
 			}
 		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_IN_MS));
 	}
 }
