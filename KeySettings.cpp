@@ -5,7 +5,7 @@
 
 KeySettings globalSettings;
 
-bool KeySettings::Init(char* fileNameOnly)
+bool KeySettings::Init(WCHAR* fileNameOnly)
 {
 	bool ret = false;
 
@@ -20,7 +20,7 @@ bool KeySettings::Init(char* fileNameOnly)
 
 			// Assume that the .ini file is in the same folder as 
 			// this program is running from
-			swprintf_s(m_fullPathToFile, _countof(m_fullPathToFile) - 1, L"%ls\\%hs", path, fileNameOnly);
+			swprintf_s(m_fullPathToFile, _countof(m_fullPathToFile) - 1, L"%ls\\%ls", path, fileNameOnly);
 			SI_Error rc = m_ini.LoadFile(m_fullPathToFile);
 			if (rc == SI_OK)
 			{

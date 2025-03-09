@@ -39,7 +39,7 @@ public:
 
 public: 
 	// Loads Ini file
-	bool Init(char* fileName); // filename only (i.e. no path)
+	bool Init(WCHAR* fileName); // filename only (i.e. no path)
 	
 	// Decode key code to name of key
 	const char* KeySettings::DecodeKey(uint8_t keyCode);

@@ -8,7 +8,7 @@ bool BackgroundProcessing::Create()
 {
 	bool ret = false;
 
-	if (globalSettings.Init("Keys.ini"))
+	if (globalSettings.Init(L"Keys.ini"))
 	{
 		m_bContinue = true;
 		m_mainThread = std::thread(Work, this);
