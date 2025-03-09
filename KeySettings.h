@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <regex>
 #include <vector>
 #include <map>
 #include <shared_mutex>
+#include <regex>
 #include ".\SimpleIni\SimpleIni.h"
 
 class KeySettings
@@ -40,6 +38,7 @@ public:
 	};
 
 public: 
+	// Loads Ini file
 	bool Init(char* fileName); // filename only (i.e. no path)
 	
 	// Decode key code to name of key
@@ -60,6 +59,7 @@ public:
 	bool DeletePlaybackKey(uint8_t macroKeyCode, int playbackIdx);
 	
 private:
+	// Parse Ini file
 	bool ParseSection(CSimpleIniA& m_ini, MacroKey& key, const char* sectionName);
 	bool ParseIni(CSimpleIniA& m_ini);
 	std::vector<std::string> Split(const char* str, char delimiter);

@@ -12,6 +12,7 @@ public:
 protected:
 	static void Work(BackgroundProcessing* pThis);
 private:
+	void    DebugMsg(char* szDbg);
 	void    DoWork();
 	void    DebugKeyPressed(uint8_t keyCode, uint8_t keyboardState[]);
 	void    PlayKey(KeySettings::PlaybackKey key);

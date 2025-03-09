@@ -12,15 +12,15 @@ bool KeySettings::Init(char* fileNameOnly)
 	WCHAR path[MAX_PATH] = { 0 };
 	if (GetModuleFileName(nullptr, path, MAX_PATH))
 	{
-		WCHAR* pStrPos = wcsrchr(path, '\\');
+		WCHAR* pStrPos = std::wcsrchr(path, '\\');
 		if (pStrPos)
 		{
-			*pStrPos = (WCHAR) 0; // Strip filename - get just the path
+			// Strip executable file name & get just the path
+			*pStrPos = (WCHAR) 0;
 
 			// Assume that the .ini file is in the same folder as 
 			// this program is running from
-			wsprintf(m_fullPathToFile, L"%s\\%S", path, fileNameOnly);
-			
+			swprintf_s(m_fullPathToFile, _countof(m_fullPathToFile) - 1, L"%ls\\%hs", path, fileNameOnly);
 			SI_Error rc = m_ini.LoadFile(m_fullPathToFile);
 			if (rc == SI_OK)
 			{
@@ -93,7 +93,7 @@ bool KeySettings::ParseIni(CSimpleIniA& ini)
 	bool ret = false;
 
 	m_macroKeys.clear();
-	memset(m_macroIsActive, 0, sizeof(m_macroIsActive));
+	std::memset(m_macroIsActive, 0, sizeof(m_macroIsActive));
 	
 	CSimpleIniA::TNamesDepend sections;
 	ini.GetAllSections(sections);

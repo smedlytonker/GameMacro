@@ -30,6 +30,15 @@ bool BackgroundProcessing::Destroy()
 	return true;
 }
 
+void BackgroundProcessing::DebugMsg(char* szDbg)
+{
+#ifndef _DEBUG
+	UNREFERENCED_PARAMETER(szDbg);
+#else
+	OutputDebugStringA(szDbg);
+#endif
+}
+
 void BackgroundProcessing::Work(BackgroundProcessing* pThis)
 {
 	if (pThis != nullptr)
@@ -120,7 +129,7 @@ void BackgroundProcessing::DebugKeyPressed(uint8_t keyCode, uint8_t keyboardStat
 		key.bLeftWKey, key.bRightWKey,
 		key.name);
 
-	OutputDebugStringA(szDbg);
+	DebugMsg(szDbg);
 #endif
 }
 
@@ -171,10 +180,10 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 #ifdef _DEBUG
 	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
 	// have to use sprintf_s instead
-	char szDbg[128] = { 0 };
 	const char* name = globalSettings.DecodeKey(macroKey.keyCode);
+	char szDbg[128] = { 0 };
 	sprintf_s(szDbg, _countof(szDbg) - 1, "Macro started: %s\r\n", name);
-	OutputDebugStringA(szDbg);
+	DebugMsg(szDbg);
 #endif
 
 	while (m_bContinue && (keyIndex < nKeys))
@@ -190,7 +199,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 			if (((keyIndex + 1) >= nKeys) && !macroKey.bLoop)
 			{
 #ifdef _DEBUG
-				OutputDebugStringA("Done(1)\r\n");
+				DebugMsg("Done(1)\r\n");
 #endif
 				break;
 			}
@@ -232,7 +241,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 				// last key. To prevent this:
 				// #define NO_DELAY_AFTER_LAST_KEY
 #ifdef _DEBUG
-				OutputDebugStringA("Done(2)\r\n");
+				DebugMsg("Done(2)\r\n");
 #endif
 				break;
 			}
@@ -251,7 +260,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 					// Current macro is cancled to start
 					// playing another macro
 #ifdef _DEBUG
-					OutputDebugStringA("Cancelled\r\n");
+					DebugMsg("Cancelled\r\n");
 #endif
 				}
 				else
@@ -267,7 +276,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 						// re-playing.
 						macroKeyCode = 0;
 #ifdef _DEBUG
-						OutputDebugStringA("Loop ended\r\n");
+						DebugMsg("Loop ended\r\n");
 #endif
 					}
 				}
@@ -287,10 +296,10 @@ void BackgroundProcessing::PlayKey(KeySettings::PlaybackKey key)
 #else
 	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
 	// have to use sprintf_s instead
-	char szDbg[128] = { 0 };
 	const char* name = globalSettings.DecodeKey(key.keyCode);
+	char szDbg[128] = { 0 };
 	sprintf_s(szDbg, _countof(szDbg) - 1, "Key: %s\r\n", name);
-	OutputDebugStringA(szDbg);
+	DebugMsg(szDbg);
 #endif
 
 	// *** Tyler put your code here ***
