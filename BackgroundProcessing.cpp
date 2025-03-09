@@ -75,25 +75,24 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 			PlayKey(macroKey.keys[keyIndex]);
 			
 #ifdef NO_DELAY_AFTER_LAST_KEY
-			if ((keyIndex + 1) >= nKeys)
+			//If we don't want a delay after the last key 
+			//played when its not a looping macro.
+			if (((keyIndex + 1) >= nKeys) && !macroKey.bLoop)
 			{
-				if (!macroKey.bLoop)
-				{
 #ifdef _DEBUG
-					OutputDebugStringA("Done(1)\r\n");
+				OutputDebugStringA("Done(1)\r\n");
 #endif
-					break;
-				}
+				break;
 			}
 #endif
 		}
 		else
 		{
 			uint32_t elapsed = GetTickCount() - startPlayback;
-
 			if (elapsed >= macroKey.keys[keyIndex].delayInMS)
 			{
-				//Advance to next key
+				//Waited the delay amount following the key.
+				//Its time to advance to the next key.
 				startPlayback = 0;
 				keyIndex++;
 			}
@@ -101,13 +100,24 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 
 		if (keyIndex >= nKeys)
 		{
+			// We have reached the end of the keys to
+			// playback
+
 			if (macroKey.bLoop)
 			{
+				// If this is a loop macro, start over 
+				// from the first key
 				keyIndex = 0;
 				startPlayback = 0;
 			}
 			else
 			{
+				// Finished playing macro - exit
+			
+				// If we exit playing the macro here this means 
+				// we waited for the delay at the end of the 
+				// last key. To prevent this:
+				// #define NO_DELAY_AFTER_LAST_KEY
 #ifdef _DEBUG
 				OutputDebugStringA("Done(2)\r\n");
 #endif
@@ -118,19 +128,30 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeInMS));
 
+			// Check to see if a macro key is pressed while 
+			// playing back the current macro
 			macroKeyCode = MacroKeyWasPressed();
 			if (macroKeyCode != 0)
 			{
 				if (!macroKey.bLoop)
 				{
+					// Current macro is cancled to start
+					// playing another macro
 #ifdef _DEBUG
 					OutputDebugStringA("Cancelled\r\n");
 #endif
 				}
 				else
 				{
+					// If we are playing a loop macro then
+					// stop playback of the current macro
 					if (macroKeyCode == macroKey.keyCode)
 					{
+						// If they pressed the same key as the 
+						// current loop macro, make sure this 
+						// just cancels the current macro
+						// and does not start the macro
+						// re-playing.
 						macroKeyCode = 0;
 #ifdef _DEBUG
 						OutputDebugStringA("Loop ended\r\n");
