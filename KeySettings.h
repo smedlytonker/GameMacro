@@ -11,25 +11,23 @@
 class KeySettings
 {
 public:
-	struct KeyInList 
+	class KeyEntry
 	{
-		uint8_t keyCode;
+	public:
+		uint8_t keyCode = 0;
 		std::string name;
 		std::string keyCodeStr;
 	};
 
-	class PlaybackKey
+	class PlaybackKey : public KeyEntry
 	{
 	public:
-		uint8_t keyCode = 0;
-		uint16_t delayInMS = 0;
 		bool bShift = false;
 		bool bCtrl = false;
 		bool bAlt = false;
 		bool bWKey = false;
 
-		std::string name;
-		std::string keyCodeStr;
+		uint16_t delayInMS = 0;
 		std::string delayInMSStr;
 	};
 
@@ -44,25 +42,28 @@ public:
 public: 
 	bool Init(char* fileName); // filename only (i.e. no path)
 	
+	// Decode key code to name of key
 	const char* KeySettings::DecodeKey(uint8_t keyCode);
 	
-	bool GetAvialableMacroKeys(std::vector<KeyInList>& keys, uint8_t currentKeyCode);
-	bool GetAvialablePlaybackKeys(std::vector<KeyInList>& keys);
-	
-	bool GetMacroKeyList(std::vector<KeyInList>& list);
+	// Macro APIs
+	bool GetAvialableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode); // Returns keys that can be  used as macro keys
+	bool GetMacroKeyList(std::vector<KeyEntry>& list); // Returns all active macros
 	bool AddMacroKey(MacroKey& macroKey);
 	bool DeleteMacroKey(uint8_t keyCode);
 	bool IsActiveMacroKey(uint8_t keyCode);
 	bool GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecode = false);
 
-	bool GetPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx, PlaybackKey& playbackKey);
-	bool AddPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx, PlaybackKey& playbackKey);
-	bool DeletePlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx);
+	// Playback key APIs
+	bool GetAvialablePlaybackKeys(std::vector<KeyEntry>& keys); // Returns keys that can be used as a playback keys
+	bool GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
+	bool AddPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
+	bool DeletePlaybackKey(uint8_t macroKeyCode, int playbackIdx);
 	
 private:
 	bool ParseSection(CSimpleIniA& m_ini, MacroKey& key, const char* sectionName);
 	bool ParseIni(CSimpleIniA& m_ini);
-		
+	std::vector<std::string> Split(const char* str, char delimiter);
+
 private:
 	CSimpleIniA m_ini;
 	WCHAR m_fullPathToFile[MAX_PATH] = { 0 };

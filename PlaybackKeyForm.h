@@ -218,7 +218,7 @@ namespace GameMacro {
 #pragma endregion
 
 		public: uint8_t m_macroKeyCode = 0;
-		public: int m_playbackKeyVectorIdx = -1;
+		public: int m_playbackIdx = -1;
 
 		private: System::Void addUpdateButton_Click(System::Object^ sender, System::EventArgs^ e)
 		{
@@ -263,9 +263,9 @@ namespace GameMacro {
 				return;
 			}
 
-			if (m_playbackKeyVectorIdx > 0)
+			if (m_playbackIdx > 0)
 			{
-				if (globalSettings.GetPlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx, playbackKey))
+				if (globalSettings.GetPlaybackKey(m_macroKeyCode, m_playbackIdx, playbackKey))
 				{
 					// Gets the orginal key
 				}
@@ -273,7 +273,7 @@ namespace GameMacro {
 				{
 					// This should not happen
 					// If it does treat it as new key
-					m_playbackKeyVectorIdx = -1;
+					m_playbackIdx = -1;
 				}
 			}
 
@@ -283,7 +283,7 @@ namespace GameMacro {
 			playbackKey.bShift  = checkBoxShift->Checked;
 			playbackKey.bWKey   = checkBoxWindows->Checked;
 			
-			if (globalSettings.AddPlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx, playbackKey))
+			if (globalSettings.AddPlaybackKey(m_macroKeyCode, m_playbackIdx, playbackKey))
 			{
 				DialogResult = System::Windows::Forms::DialogResult::OK;
 				Close();
@@ -292,7 +292,7 @@ namespace GameMacro {
 	
 		private: System::Void deleteButton_Click(System::Object^ sender, System::EventArgs^ e) 
 		{
-			if (m_playbackKeyVectorIdx < 0)
+			if (m_playbackIdx < 0)
 			{
 				// Nothing to delete
 				DialogResult = System::Windows::Forms::DialogResult::Cancel;
@@ -300,7 +300,7 @@ namespace GameMacro {
 			}
 			else
 			{
-				if (globalSettings.DeletePlaybackKey(m_macroKeyCode, m_playbackKeyVectorIdx))
+				if (globalSettings.DeletePlaybackKey(m_macroKeyCode, m_playbackIdx))
 				{
 					DialogResult = System::Windows::Forms::DialogResult::OK;
 					Close();
@@ -328,16 +328,16 @@ namespace GameMacro {
 				errorProviderDelay->SetError(textBoxDelay, "");
 		}
 
-		private: void Redraw(int playbackKeyVectorIdx)
+		private: void Redraw(int playbackIdx)
 		{
 			if (m_macroKeyCode > 0)
 			{
 				uint8_t keyCodeOfPlaybackKey = 0;
 
-				if (playbackKeyVectorIdx >= 0)
+				if (playbackIdx >= 0)
 				{
 					KeySettings::PlaybackKey playbackKey;
-					if (globalSettings.GetPlaybackKey(m_macroKeyCode, playbackKeyVectorIdx, playbackKey))
+					if (globalSettings.GetPlaybackKey(m_macroKeyCode, playbackIdx, playbackKey))
 					{
 						keyCodeOfPlaybackKey = playbackKey.keyCode;
 						checkBoxCtrl->Checked = playbackKey.bCtrl;
@@ -348,7 +348,7 @@ namespace GameMacro {
 					}
 				}
 
-				std::vector<KeySettings::KeyInList> keys;
+				std::vector<KeySettings::KeyEntry> keys;
 				if (globalSettings.GetAvialablePlaybackKeys(keys))
 				{
 					playbackKeyList->Items->Clear();
@@ -371,7 +371,7 @@ namespace GameMacro {
 
 		private: System::Void PlaybackKeyForm_Load(System::Object^ sender, System::EventArgs^ e) 
 		{
-			Redraw(m_playbackKeyVectorIdx);
+			Redraw(m_playbackIdx);
 		}
 		
 	};

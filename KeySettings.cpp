@@ -1,4 +1,5 @@
 #include "KeySettings.h"
+#include <sstream>
 
 #define MAX_KEYS 30
 
@@ -11,10 +12,10 @@ bool KeySettings::Init(char* fileNameOnly)
 	WCHAR path[MAX_PATH] = { 0 };
 	if (GetModuleFileName(nullptr, path, MAX_PATH))
 	{
-		LPTSTR pStrPos = wcsrchr(path, '\\');
+		WCHAR* pStrPos = wcsrchr(path, '\\');
 		if (pStrPos)
 		{
-			*pStrPos = NULL; // Strip filename - get just the path
+			*pStrPos = (WCHAR) 0; // Strip filename - get just the path
 
 			// Assume that the .ini file is in the same folder as 
 			// this program is running from
@@ -36,63 +37,49 @@ const char* KeySettings::DecodeKey(uint8_t keyCode)
 	return keyCodeArray[keyCode].name;
 }
 
+std::vector<std::string> KeySettings::Split(const char* str, char delimiter)
+{
+	std::vector<std::string> tokens;
+	std::string token;
+	std::istringstream tokenStream(str);
+	while (std::getline(tokenStream, token, delimiter)) 
+	{
+		tokens.push_back(token);
+	}
+
+	return tokens;
+}
 bool KeySettings::ParseSection(CSimpleIniA& ini, MacroKey& key, const char* sectionName)
 {
 	bool ret = false;
-	char szBuff[64] = { 0 };
+
 	key.bLoop = ini.GetBoolValue(sectionName, "Loop", false);
 
 	for (int i = 1; i < MAX_KEYS; i++)
 	{
-		_itoa_s(i, szBuff, _countof(szBuff) - 1, 10);
-		const char* pKey = szBuff;
-		const char* pValue = ini.GetValue(sectionName, pKey, "");
-		if (*pValue == NULL)
+		std::string keyStr = std::to_string(i);
+		const char* fieldsStr = ini.GetValue(sectionName, keyStr.c_str(), "");
+		if ((fieldsStr == nullptr) || (*fieldsStr == ((char) 0)))
 		{
 			break;
 		}
 		else
 		{
-			char szTmp[64] = { 0 };
-			strncpy_s(szTmp, _countof(szTmp) - 1, pValue, _countof(szTmp) - 1);
-
-			//_CRT_SECURE_NO_WARNINGS;
-			char* tokenPos = nullptr;
-			char* pKey = strtok_s(szTmp, ",", &tokenPos);
-			if (pKey != nullptr)
+			std::vector<std::string> fields = Split(fieldsStr, ',');
+			if (fields.size() >= 6)
 			{
-				char* pDelay = strtok_s(nullptr, ",", &tokenPos);
-				if (pDelay != nullptr)
+				PlaybackKey playbackKey;
+				playbackKey.keyCode   = (uint8_t)   std::stoi(fields[0]);
+				playbackKey.delayInMS = (uint16_t)  std::stoi(fields[1]);
+				playbackKey.bCtrl     = (bool)     (std::stoi(fields[2]) > 0) ? true : false;
+				playbackKey.bAlt      = (bool)     (std::stoi(fields[3]) > 0) ? true : false;
+				playbackKey.bShift    = (bool)     (std::stoi(fields[4]) > 0) ? true : false;
+				playbackKey.bWKey     = (bool)     (std::stoi(fields[5]) > 0) ? true : false;
+
+				if ((playbackKey.delayInMS > 0) && (playbackKey.keyCode > 0))
 				{
-					char* pCtrl = strtok_s(nullptr, ",", &tokenPos);
-					if (pCtrl != nullptr)
-					{
-						char* pAlt = strtok_s(nullptr, ",", &tokenPos);
-						if (pAlt != nullptr)
-						{
-							char* pShift = strtok_s(nullptr, ",", &tokenPos);
-							if (pShift != nullptr)
-							{
-								char* pWKey = strtok_s(nullptr, ",", &tokenPos);
-								if (pWKey != nullptr)
-								{
-									PlaybackKey playbackKey;
-									playbackKey.keyCode   = (uint8_t)atoi(pKey);
-									playbackKey.delayInMS = (uint16_t)atoi(pDelay);
-									playbackKey.bCtrl     = (bool)atoi(pCtrl);
-									playbackKey.bAlt      = (bool)atoi(pAlt);
-									playbackKey.bShift    = (bool)atoi(pShift);
-									playbackKey.bWKey     = (bool)atoi(pWKey);
-									
-									if ((playbackKey.delayInMS > 0) && (playbackKey.keyCode > 0))
-									{
-										ret = true;
-										key.keys.push_back(playbackKey);
-									}
-								}
-							}
-						}
-					}
+					ret = true;
+					key.keys.push_back(playbackKey);
 				}
 			}
 		}
@@ -112,7 +99,7 @@ bool KeySettings::ParseIni(CSimpleIniA& ini)
 	ini.GetAllSections(sections);
 	for (auto& section : sections)
 	{
-		uint16_t key = atoi(section.pItem);
+		uint16_t key = std::stoi(section.pItem);
 		if ((key > 0) && (key < 255))
 		{
 			MacroKey macroKey;
@@ -130,7 +117,7 @@ bool KeySettings::ParseIni(CSimpleIniA& ini)
 	return ret;
 }
 
-bool KeySettings::GetAvialableMacroKeys(std::vector<KeyInList>& keys, uint8_t currentKeyCode)
+bool KeySettings::GetAvialableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode)
 {
 	bool ret = false;
 
@@ -144,7 +131,7 @@ bool KeySettings::GetAvialableMacroKeys(std::vector<KeyInList>& keys, uint8_t cu
 			if (currentKeyCode == i)
 			{
 				// Add the macro key that is already selected
-				KeyInList key;
+				KeyEntry key;
 				key.keyCode = (uint8_t)i;
 				key.name = keyCodeArray[i].name;
 				keys.push_back(key);
@@ -157,7 +144,7 @@ bool KeySettings::GetAvialableMacroKeys(std::vector<KeyInList>& keys, uint8_t cu
 				if (it == m_macroKeys.end())
 				{
 					// Key not being used
-					KeyInList key;
+					KeyEntry key;
 					key.keyCode = (uint8_t)i;
 					key.name = keyCodeArray[i].name;
 					keys.push_back(key);
@@ -170,7 +157,7 @@ bool KeySettings::GetAvialableMacroKeys(std::vector<KeyInList>& keys, uint8_t cu
 	return ret;
 }
 
-bool KeySettings::GetAvialablePlaybackKeys(std::vector<KeyInList>& keys)
+bool KeySettings::GetAvialablePlaybackKeys(std::vector<KeyEntry>& keys)
 {
 	bool ret = false;
 
@@ -181,7 +168,7 @@ bool KeySettings::GetAvialablePlaybackKeys(std::vector<KeyInList>& keys)
 	{
 		if (keyCodeArray[i].bPlaybackValid)
 		{
-			KeyInList key;
+			KeyEntry key;
 			key.keyCode = (uint8_t)i;
 			key.name = keyCodeArray[i].name;
 			keys.push_back(key);
@@ -202,21 +189,17 @@ bool KeySettings::AddMacroKey(MacroKey& macroKey)
 	{
 		if (m_macroKeys.size() < MAX_KEYS)
 		{
-			char szSection[32] = { 0 };
-			_itoa_s(macroKey.keyCode, szSection, _countof(szSection) - 1, 10);
-
-			m_ini.Delete(szSection, nullptr, true);
-			m_ini.SetBoolValue(szSection, "Loop", macroKey.bLoop);
+			std::string sectionStr = std::to_string(macroKey.keyCode);
+			m_ini.Delete(sectionStr.c_str(), nullptr, true);
+			m_ini.SetBoolValue(sectionStr.c_str(), "Loop", macroKey.bLoop);
 
 			uint8_t nPlaybackKeys = 1;
 			for (auto& playbackKey : macroKey.keys)
 			{
 				if (nPlaybackKeys <= MAX_KEYS)
 				{
-					char szKey[32] = { 0 };
-					_itoa_s(nPlaybackKeys, szKey, _countof(szKey) - 1, 10);
-					nPlaybackKeys++;
-
+					// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
+					// have to use sprintf_s instead
 					char szTmp[64] = { 0 };
 					sprintf_s(szTmp, _countof(szTmp) - 1, 
 						"%u,%u,%u,%u,%u,%u",
@@ -227,7 +210,9 @@ bool KeySettings::AddMacroKey(MacroKey& macroKey)
 						playbackKey.bShift,
 						playbackKey.bWKey);
 
-					m_ini.SetValue(szSection, szKey, szTmp);
+					std::string keyStr = std::to_string(nPlaybackKeys);
+					nPlaybackKeys++;
+					m_ini.SetValue(sectionStr.c_str(), keyStr.c_str(), szTmp);
 				}
 			}
 
@@ -265,10 +250,9 @@ bool KeySettings::DeleteMacroKey(uint8_t keyCode)
 	{
 		m_macroKeys.erase(it);
 		m_macroIsActive[keyCode] = 0;
-
-		char szSection[32] = { 0 };
-		_itoa_s(keyCode, szSection, _countof(szSection) - 1, 10);
-		m_ini.Delete(szSection, nullptr, true);
+		
+		std::string sectionStr = std::to_string(keyCode);
+		m_ini.Delete(sectionStr.c_str(), nullptr, true);
 
 		SI_Error rc = m_ini.SaveFile(m_fullPathToFile, false);
 		if (rc == SI_OK)
@@ -314,14 +298,11 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 			if (!bNoDecode)
 			{
 				// Update values for UI
-				char szTmp[32] = { 0 };
 				for (PlaybackKey& playbackKey : macroKey.keys)
 				{
 					playbackKey.name = DecodeKey(playbackKey.keyCode);
-					_itoa_s(playbackKey.keyCode, szTmp, _countof(szTmp) - 1, 10);
-					playbackKey.keyCodeStr = szTmp;
-					_itoa_s(playbackKey.delayInMS, szTmp, _countof(szTmp) - 1, 10);
-					playbackKey.delayInMSStr = szTmp;
+					playbackKey.keyCodeStr = std::to_string(playbackKey.keyCode);
+					playbackKey.delayInMSStr = std::to_string(playbackKey.delayInMS);
 				}
 			}
 		}
@@ -330,19 +311,17 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 	return ret;
 }
 
-bool KeySettings::GetMacroKeyList(std::vector<KeyInList>& keys)
+bool KeySettings::GetMacroKeyList(std::vector<KeyEntry>& keys)
 {
 	bool ret = false;
-	char szTmp[32] = { 0 };
 
 	std::unique_lock<std::shared_mutex> lock(protectSettings);
 
 	for(auto macroKey : m_macroKeys)
 	{
-		KeyInList key;
+		KeyEntry key;
 		key.keyCode = macroKey.second.keyCode;
-		_itoa_s(key.keyCode, szTmp, _countof(szTmp) - 1, 10);
-		key.keyCodeStr = szTmp;
+		key.keyCodeStr = std::to_string(key.keyCode);
 		key.name = keyCodeArray[key.keyCode].name;
 		keys.push_back(key);
 		ret = true;
@@ -351,7 +330,7 @@ bool KeySettings::GetMacroKeyList(std::vector<KeyInList>& keys)
 	return ret;
 }
 
-bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx, PlaybackKey& playbackKey)
+bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey)
 {
 	bool ret = false;
 
@@ -363,28 +342,20 @@ bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 
 		playbackKey.name = keyCodeArray[playbackKey.keyCode].name;
 
-		if (playbackKeyVectorIdx < 0)
+		if (playbackIdx < 0)
 		{
 			macroKey.keys.push_back(playbackKey);
 			ret = true;
 		}
 		else
 		{
-			// playbackKeyVectorIdx is a zero based index and must be less
+			// playbackIdx is a zero based index and must be less
 			// then the number of items in the vector by 1
 			int numberOfPlaybackKeys = (int)macroKey.keys.size();
-			if (numberOfPlaybackKeys > playbackKeyVectorIdx)
+			if (numberOfPlaybackKeys > playbackIdx)
 			{
-				try
-				{
-					macroKey.keys[playbackKeyVectorIdx] = playbackKey;
-					ret = true;
-				}
-				catch (const std::out_of_range& e)
-				{
-					// Don't be a bone head and write good code
-					UNREFERENCED_PARAMETER(e);
-				}
+				macroKey.keys[playbackIdx] = playbackKey;
+				ret = true;
 			}
 		}
 
@@ -399,12 +370,12 @@ bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 	return ret;
 }
 
-bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx, PlaybackKey& playbackKey)
+bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey)
 {
 	bool ret = false;
 
 
-	if(playbackKeyVectorIdx >= 0)
+	if(playbackIdx >= 0)
 	{
 		MacroKey macroKey;
 		if (GetMacroKey(macroKeyCode, macroKey))
@@ -412,25 +383,14 @@ bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 			// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
 			std::unique_lock<std::shared_mutex> lock(protectSettings);
 
-			// playbackKeyVectorIdx is a zero based index and must be less
+			// playbackIdx is a zero based index and must be less
 			// then the number of items in the vector by 1
 			int numberOfPlaybackKeys = (int) macroKey.keys.size();
-			if (numberOfPlaybackKeys > playbackKeyVectorIdx)
+			if (numberOfPlaybackKeys > playbackIdx)
 			{
-				try
-				{
-					char szTmp[32] = { 0 };
-					playbackKey = macroKey.keys[playbackKeyVectorIdx];
-					_itoa_s(playbackKey.keyCode, szTmp, _countof(szTmp) - 1, 10);
-					playbackKey.keyCodeStr = szTmp;
-					playbackKey.name = keyCodeArray[playbackKey.keyCode].name;
-				}
-				catch (const std::out_of_range& e)
-				{
-					// Don't be a bone head and write good code
-					UNREFERENCED_PARAMETER(e);
-				}
-
+				playbackKey = macroKey.keys[playbackIdx];
+				playbackKey.keyCodeStr = std::to_string(playbackKey.keyCode);
+				playbackKey.name = keyCodeArray[playbackKey.keyCode].name;
 				ret = true;
 			}
 		}
@@ -439,7 +399,7 @@ bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx,
 	return ret;
 }
 
-bool KeySettings::DeletePlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx)
+bool KeySettings::DeletePlaybackKey(uint8_t macroKeyCode, int playbackIdx)
 {
 	bool ret = false;
 
@@ -449,23 +409,15 @@ bool KeySettings::DeletePlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorI
 		// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
 		std::unique_lock<std::shared_mutex> lock(protectSettings);
 
-		if (playbackKeyVectorIdx >= 0)
+		if (playbackIdx >= 0)
 		{
-			// playbackKeyVectorIdx is a zero based index and must be less
+			// playbackIdx is a zero based index and must be less
 			// then the number of items in the vector by 1
 			int numberOfPlaybackKeys = (int)macroKey.keys.size();
-			if (numberOfPlaybackKeys > playbackKeyVectorIdx)
+			if (numberOfPlaybackKeys > playbackIdx)
 			{
-				try
-				{
-					macroKey.keys.erase(macroKey.keys.begin() + playbackKeyVectorIdx);
-					ret = true;
-				}
-				catch (const std::out_of_range& e)
-				{
-					// Don't be a bone head and write good code
-					UNREFERENCED_PARAMETER(e);
-				}
+				macroKey.keys.erase(macroKey.keys.begin() + playbackIdx);
+				ret = true;
 			}
 		}
 

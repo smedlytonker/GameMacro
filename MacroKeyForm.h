@@ -217,13 +217,13 @@ namespace GameMacro {
 		public: uint8_t m_keyCode = 0;
 
 
-		private: void DisplayPlaybackKey(uint8_t macroKeyCode, int playbackKeyVectorIdx)
+		private: void DisplayPlaybackKey(uint8_t macroKeyCode, int playbackIdx)
 		{
 			if (playbackKeyList->Items->Count > 0)
 			{
 				PlaybackKeyForm^ userDlg = gcnew PlaybackKeyForm;
 				userDlg->m_macroKeyCode = macroKeyCode;
-				userDlg->m_playbackKeyVectorIdx = playbackKeyVectorIdx;
+				userDlg->m_playbackIdx = playbackIdx;
 				System::Windows::Forms::DialogResult ret = userDlg->ShowDialog();
 				if (ret == System::Windows::Forms::DialogResult::OK)
 				{
@@ -243,7 +243,7 @@ namespace GameMacro {
 
 			PlaybackKeyForm^ userDlg = gcnew PlaybackKeyForm;
 			userDlg->m_macroKeyCode = m_keyCode;
-			userDlg->m_playbackKeyVectorIdx = -1;
+			userDlg->m_playbackIdx = -1;
 			System::Windows::Forms::DialogResult ret = userDlg->ShowDialog();
 			if (ret == System::Windows::Forms::DialogResult::OK)
 			{
@@ -299,7 +299,7 @@ namespace GameMacro {
 		{
 			if (m_keyCode == 0)
 			{
-				std::vector<KeySettings::KeyInList> macroKeys;
+				std::vector<KeySettings::KeyEntry> macroKeys;
 				if (globalSettings.GetAvialableMacroKeys(macroKeys, m_keyCode))
 				{
 					macroKeyList->Items->Clear();
@@ -317,7 +317,7 @@ namespace GameMacro {
 				KeySettings::MacroKey macroKey;
 				if (globalSettings.GetMacroKey(m_keyCode, macroKey))
 				{
-					std::vector<KeySettings::KeyInList> macroKeys;
+					std::vector<KeySettings::KeyEntry> macroKeys;
 					if (globalSettings.GetAvialableMacroKeys(macroKeys, m_keyCode))
 					{
 						checkBoxLoop->Checked = macroKey.bLoop;
@@ -336,16 +336,16 @@ namespace GameMacro {
 						}
 
 						playbackKeyList->Items->Clear();
-						int playbackKeyVectorIdx = 0;
+						int playbackIdx = 0;
 						for (auto playbackKey : macroKey.keys)
 						{
 							ListViewItem^ lvi = gcnew ListViewItem(ConvertToManagedString(playbackKey.keyCodeStr));
-							lvi->Tag = playbackKeyVectorIdx;
+							lvi->Tag = playbackIdx;
 							lvi->SubItems->Add(ConvertToManagedString(playbackKey.name));
 							lvi->SubItems->Add(ConvertToManagedString(playbackKey.delayInMSStr));
 
 							playbackKeyList->Items->Add(lvi);
-							playbackKeyVectorIdx++;
+							playbackIdx++;
 						}
 					}
 				}
