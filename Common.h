@@ -6,20 +6,7 @@
 using namespace System;
 using namespace msclr::interop;
 
-ref class MacroItem
-{
-public:
-	uint8_t keyCode = 0;
-	String^ name;
-
-public:
-	virtual String^ ToString() override
-	{
-		return name;
-	}
-};
-
-ref class PlaybackItem
+ref class KeyItem
 {
 public:
 	uint8_t keyCode = 0;

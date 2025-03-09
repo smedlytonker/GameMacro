@@ -58,7 +58,7 @@ void BackgroundProcessing::DoWork()
 		while (m_bContinue && (macroKeyCode != 0))
 		{
 			KeySettings::MacroKey macroKey;
-			if (globalSettings.GetMacroKey(macroKeyCode, macroKey, true))
+			if (globalSettings.GetMacroKey(macroKeyCode, macroKey))
 			{
 				if (macroKey.keys.size() > 0) // Macros need keys to playback
 				{
@@ -74,71 +74,10 @@ void BackgroundProcessing::DoWork()
 	}
 }
 
-void BackgroundProcessing::DebugKeyPressed(uint8_t keyCode, uint8_t keyboardState[])
-{
-#ifndef _DEBUG
-	UNREFERENCED_PARAMETER(keyCode);
-	UNREFERENCED_PARAMETER(keyboardState);
-#else
-	struct KeyPressed
-	{
-		uint8_t keyCode = 0;
-		const char* name = nullptr;
-		bool bCapital = false;
-		bool bNumLock = false;
-		bool bScrollLock = false;
-		bool bInsert = false;
-		bool bLeftShift = false;
-		bool bRightShift = false;
-		bool bLeftCtrl = false;
-		bool bRightCtrl = false;
-		bool bLeftAlt = false;
-		bool bRightAlt = false;
-		bool bLeftWKey = false;
-		bool bRightWKey = false;
-	};
-
-	KeyPressed key = { 0 };
-	key.name = globalSettings.DecodeKey(keyCode);
-	key.keyCode = keyCode;
-
-	//Toggle keys
-	if (keyboardState[VK_CAPITAL] & 0x01) key.bCapital = true;
-	if (keyboardState[VK_NUMLOCK] & 0x01) key.bNumLock = true;
-	if (keyboardState[VK_SCROLL] & 0x01) key.bScrollLock = true;
-	if (keyboardState[VK_INSERT] & 0x01) key.bInsert = true;
-
-	// Keys that can be held down with other keys
-	if (keyboardState[VK_LSHIFT] & 0x80) key.bLeftShift = true;
-	if (keyboardState[VK_RSHIFT] & 0x80) key.bRightShift = true;
-	if (keyboardState[VK_LCONTROL] & 0x80) key.bLeftCtrl = true;
-	if (keyboardState[VK_RCONTROL] & 0x80) key.bRightCtrl = true;
-	if (keyboardState[VK_LMENU] & 0x80) key.bLeftAlt = true;
-	if (keyboardState[VK_RMENU] & 0x80) key.bRightAlt = true;
-	if (keyboardState[VK_LWIN] & 0x80) key.bLeftWKey = true;
-	if (keyboardState[VK_RWIN] & 0x80) key.bRightWKey = true;
-
-	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
-	// have to use sprintf_s instead
-	char szDbg[128] = { 0 };
-	sprintf_s(szDbg, _countof(szDbg) - 1,
-		"Key(%u)(%u, %u, %u, %u)(%u, %u)(%u, %u)(%u, %u)[%u, %u]: %s\r\n",
-		key.keyCode,
-		key.bCapital, key.bNumLock, key.bScrollLock, key.bInsert,
-		key.bLeftShift, key.bRightShift,
-		key.bLeftCtrl, key.bRightCtrl,
-		key.bLeftAlt, key.bRightAlt,
-		key.bLeftWKey, key.bRightWKey,
-		key.name);
-
-	DebugMsg(szDbg);
-#endif
-}
-
 uint8_t BackgroundProcessing::MacroKeyWasPressed()
 {
 	static uint8_t _keyboardState[256] = { 0 };
-	uint8_t macroKeyCode = 0;
+	uint8_t retKeyCode = 0;
 
 	GetKeyState(0);
 	uint8_t keyboardState[256] = { 0 };
@@ -161,7 +100,7 @@ uint8_t BackgroundProcessing::MacroKeyWasPressed()
 					if (globalSettings.IsActiveMacroKey(i))
 					{
 						//DebugKeyPressed(i, keyboardState); // This is only needed for debug
-						macroKeyCode = i;
+						retKeyCode = i;
 						break;
 					}
 				}
@@ -169,7 +108,7 @@ uint8_t BackgroundProcessing::MacroKeyWasPressed()
 		}
 	}
 
-	return macroKeyCode;
+	return retKeyCode;
 }
 
 uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
@@ -182,9 +121,8 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 #ifdef _DEBUG
 	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
 	// have to use sprintf_s instead
-	const char* name = globalSettings.DecodeKey(macroKey.keyCode);
 	char szDbg[128] = { 0 };
-	sprintf_s(szDbg, _countof(szDbg) - 1, "Macro started: %s\r\n", name);
+	sprintf_s(szDbg, _countof(szDbg) - 1, "Macro started: %s\r\n", macroKey.name.c_str());
 	DebugMsg(szDbg);
 #endif
 
@@ -294,9 +232,8 @@ void BackgroundProcessing::PlayKey(KeySettings::PlaybackKey key)
 #else
 	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
 	// have to use sprintf_s instead
-	const char* name = globalSettings.DecodeKey(key.keyCode);
 	char szDbg[128] = { 0 };
-	sprintf_s(szDbg, _countof(szDbg) - 1, "Key: %s\r\n", name);
+	sprintf_s(szDbg, _countof(szDbg) - 1, "Key: %s\r\n", key.name.c_str());
 	DebugMsg(szDbg);
 #endif
 

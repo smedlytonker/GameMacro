@@ -29,10 +29,9 @@ public:
 		std::string delayInMSStr;
 	};
 
-	class MacroKey
+	class MacroKey : public KeyEntry
 	{
 	public:
-		uint8_t keyCode = 0;
 		bool bLoop = false;
 		std::vector<PlaybackKey> keys;
 	};
@@ -40,20 +39,17 @@ public:
 public: 
 	// Loads Ini file
 	bool Init(WCHAR* fileName); // filename only (i.e. no path)
-	
-	// Decode key code to name of key
-	const char* KeySettings::DecodeKey(uint8_t keyCode);
-	
+		
 	// Macro APIs
-	bool GetAvialableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode); // Returns keys that can be  used as macro keys
+	bool GetAvailableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode); // Returns keys that can be  used as macro keys
 	bool GetMacroKeyList(std::vector<KeyEntry>& list); // Returns all active macros
 	bool AddMacroKey(MacroKey& macroKey);
 	bool DeleteMacroKey(uint8_t keyCode);
 	bool IsActiveMacroKey(uint8_t keyCode);
-	bool GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecode = false);
+	bool GetMacroKey(uint8_t keyCode, MacroKey& macroKey);
 
 	// Playback key APIs
-	bool GetAvialablePlaybackKeys(std::vector<KeyEntry>& keys); // Returns keys that can be used as a playback keys
+	bool GetAvailablePlaybackKeys(std::vector<KeyEntry>& keys); // Returns keys that can be used as a playback keys
 	bool GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
 	bool AddPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
 	bool DeletePlaybackKey(uint8_t macroKeyCode, int playbackIdx);
@@ -63,6 +59,10 @@ private:
 	bool ParseSection(CSimpleIniA& m_ini, MacroKey& key, const char* sectionName);
 	bool ParseIni(CSimpleIniA& m_ini);
 	std::vector<std::string> Split(const char* str, char delimiter);
+
+	// Misc
+	bool GetMacro_internal(uint8_t keyCode, MacroKey& macroKey);
+	KeyEntry KeySettings::KeyCodeToEntry(uint8_t keyCode);
 
 private:
 	CSimpleIniA m_ini;
@@ -83,7 +83,7 @@ private:
 		bool        bPlaybackValid;
 	};
 
-	KeyLookUp keyCodeArray[256] = {
+	KeyLookUp vkArray[256] = {
 		{ 0x00, "Invalid", 0, 0},
 		{ VK_LBUTTON, "Left Mouse Button", 0, 0},
 		{ VK_RBUTTON, "Right Mouse Button", 0, 0},

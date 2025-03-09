@@ -229,7 +229,7 @@ namespace GameMacro {
 				return;
 			}
 
-			PlaybackItem^ item = (PlaybackItem^) playbackKeyList->SelectedItem;
+			KeyItem^ item = (KeyItem^) playbackKeyList->SelectedItem;
 			KeySettings::PlaybackKey playbackKey;
 
 			if (item->keyCode == 0)
@@ -349,13 +349,13 @@ namespace GameMacro {
 				}
 
 				std::vector<KeySettings::KeyEntry> keys;
-				if (globalSettings.GetAvialablePlaybackKeys(keys))
+				if (globalSettings.GetAvailablePlaybackKeys(keys))
 				{
 					playbackKeyList->Items->Clear();
 
 					for (auto key : keys)
 					{
-						PlaybackItem^ item = gcnew PlaybackItem();
+						KeyItem^ item = gcnew KeyItem();
 						item->keyCode = key.keyCode;
 						item->name = ConvertToManagedString(key.name);
 						int iPos = playbackKeyList->Items->Add(item);

@@ -124,10 +124,7 @@ namespace GameMacro {
 		{
 			MacroKeyForm^ userDlg = gcnew MacroKeyForm;
 			System::Windows::Forms::DialogResult ret = userDlg->ShowDialog();
-			if (ret == System::Windows::Forms::DialogResult::OK)
-			{
-				Redraw();
-			}
+			Redraw();
 		}
 
 		private: void Redraw()

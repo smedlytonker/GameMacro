@@ -300,12 +300,12 @@ namespace GameMacro {
 			if (m_keyCode == 0)
 			{
 				std::vector<KeySettings::KeyEntry> macroKeys;
-				if (globalSettings.GetAvialableMacroKeys(macroKeys, m_keyCode))
+				if (globalSettings.GetAvailableMacroKeys(macroKeys, m_keyCode))
 				{
 					macroKeyList->Items->Clear();
 					for (auto key : macroKeys)
 					{
-						MacroItem^ item = gcnew MacroItem();
+						KeyItem^ item = gcnew KeyItem();
 						item->keyCode = key.keyCode;
 						item->name = ConvertToManagedString(key.name);
 						int iPos = macroKeyList->Items->Add(item);
@@ -318,14 +318,14 @@ namespace GameMacro {
 				if (globalSettings.GetMacroKey(m_keyCode, macroKey))
 				{
 					std::vector<KeySettings::KeyEntry> macroKeys;
-					if (globalSettings.GetAvialableMacroKeys(macroKeys, m_keyCode))
+					if (globalSettings.GetAvailableMacroKeys(macroKeys, m_keyCode))
 					{
 						checkBoxLoop->Checked = macroKey.bLoop;
 
 						macroKeyList->Items->Clear();
 						for (auto key : macroKeys)
 						{
-							MacroItem^ item = gcnew MacroItem();
+							KeyItem^ item = gcnew KeyItem();
 							item->keyCode = key.keyCode;
 							item->name = ConvertToManagedString(key.name);
 							int iPos = macroKeyList->Items->Add(item);
@@ -385,7 +385,7 @@ namespace GameMacro {
 				return;
 			}
 
-			MacroItem^ item = (MacroItem^)macroKeyList->SelectedItem;
+			KeyItem^ item = (KeyItem^) macroKeyList->SelectedItem;
 			if (m_keyCode != item->keyCode)
 			{
 				KeySettings::MacroKey macroKey;

@@ -32,11 +32,6 @@ bool KeySettings::Init(WCHAR* fileNameOnly)
 	return ret;
 }
 
-const char* KeySettings::DecodeKey(uint8_t keyCode)
-{
-	return keyCodeArray[keyCode].name;
-}
-
 std::vector<std::string> KeySettings::Split(const char* str, char delimiter)
 {
 	std::vector<std::string> tokens;
@@ -49,6 +44,7 @@ std::vector<std::string> KeySettings::Split(const char* str, char delimiter)
 
 	return tokens;
 }
+
 bool KeySettings::ParseSection(CSimpleIniA& ini, MacroKey& key, const char* sectionName)
 {
 	bool ret = false;
@@ -117,7 +113,17 @@ bool KeySettings::ParseIni(CSimpleIniA& ini)
 	return ret;
 }
 
-bool KeySettings::GetAvialableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode)
+KeySettings::KeyEntry KeySettings::KeyCodeToEntry(uint8_t keyCode)
+{
+	KeyEntry key;
+	key.keyCode = keyCode;
+	key.name = vkArray[keyCode].name;
+	key.keyCodeStr = std::to_string(keyCode);
+
+	return key;
+}
+
+bool KeySettings::GetAvailableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode)
 {
 	bool ret = false;
 
@@ -126,14 +132,12 @@ bool KeySettings::GetAvialableMacroKeys(std::vector<KeyEntry>& keys, uint8_t cur
 	//for (int i = 1; i < 256; ++i)
 	for (int i = 1; i < 0x7F; ++i) // Don't need to go thru all the keys
 	{
-		if (keyCodeArray[i].bMacroValid)
+		if (vkArray[i].bMacroValid)
 		{
 			if (currentKeyCode == i)
 			{
 				// Add the macro key that is already selected
-				KeyEntry key;
-				key.keyCode = (uint8_t)i;
-				key.name = keyCodeArray[i].name;
+				KeyEntry key = KeyCodeToEntry(i);
 				keys.push_back(key);
 				ret = true;
 			}
@@ -144,9 +148,7 @@ bool KeySettings::GetAvialableMacroKeys(std::vector<KeyEntry>& keys, uint8_t cur
 				if (it == m_macroKeys.end())
 				{
 					// Key not being used
-					KeyEntry key;
-					key.keyCode = (uint8_t)i;
-					key.name = keyCodeArray[i].name;
+					KeyEntry key = KeyCodeToEntry(i);
 					keys.push_back(key);
 					ret = true;
 				}
@@ -157,7 +159,7 @@ bool KeySettings::GetAvialableMacroKeys(std::vector<KeyEntry>& keys, uint8_t cur
 	return ret;
 }
 
-bool KeySettings::GetAvialablePlaybackKeys(std::vector<KeyEntry>& keys)
+bool KeySettings::GetAvailablePlaybackKeys(std::vector<KeyEntry>& keys)
 {
 	bool ret = false;
 
@@ -166,11 +168,9 @@ bool KeySettings::GetAvialablePlaybackKeys(std::vector<KeyEntry>& keys)
 	//for (int i = 1; i < 256; ++i)
 	for (int i = 1; i < 0x7F; ++i) // Don't need to go thru all the keys
 	{
-		if (keyCodeArray[i].bPlaybackValid)
+		if (vkArray[i].bPlaybackValid)
 		{
-			KeyEntry key;
-			key.keyCode = (uint8_t)i;
-			key.name = keyCodeArray[i].name;
+			KeyEntry key = KeyCodeToEntry(i);
 			keys.push_back(key);
 			ret = true;
 		}
@@ -273,11 +273,9 @@ bool KeySettings::IsActiveMacroKey(uint8_t keyCode)
 	return (m_macroIsActive[keyCode] > 0) ? true : false;
 }
 
-bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecode)
+bool KeySettings::GetMacro_internal(uint8_t keyCode, MacroKey& macroKey)
 {
 	bool ret = false;
-
-	std::unique_lock<std::shared_mutex> lock(protectSettings);
 
 	if (keyCode > 0)
 	{
@@ -285,7 +283,6 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 		if (it == m_macroKeys.end())
 		{
 			// Error - 'm_macroKeys' & 'macroIsActive' should match 
-			// each other. Some how they got out of sync.
 			m_macroIsActive[keyCode] = 0; // Make it match
 		}
 		else
@@ -293,19 +290,28 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 			macroKey = it->second;
 			m_macroIsActive[keyCode] = 1;
 			ret = true;
-			
-			if (!bNoDecode)
+
+			// Update values for UI
+			macroKey.name = vkArray[macroKey.keyCode].name;
+			macroKey.keyCodeStr = std::to_string(macroKey.keyCode);
+			for (PlaybackKey& playbackKey : macroKey.keys)
 			{
-				// Update values for UI
-				for (PlaybackKey& playbackKey : macroKey.keys)
-				{
-					playbackKey.name = DecodeKey(playbackKey.keyCode);
-					playbackKey.keyCodeStr = std::to_string(playbackKey.keyCode);
-					playbackKey.delayInMSStr = std::to_string(playbackKey.delayInMS);
-				}
+				playbackKey.name = vkArray[playbackKey.keyCode].name;
+				playbackKey.keyCodeStr = std::to_string(playbackKey.keyCode);
+				playbackKey.delayInMSStr = std::to_string(playbackKey.delayInMS);
 			}
 		}
 	}
+
+	return ret;
+}
+
+bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey)
+{
+	bool ret = false;
+
+	std::unique_lock<std::shared_mutex> lock(protectSettings);
+	ret = GetMacro_internal(keyCode, macroKey);
 
 	return ret;
 }
@@ -318,10 +324,7 @@ bool KeySettings::GetMacroKeyList(std::vector<KeyEntry>& keys)
 
 	for(auto macroKey : m_macroKeys)
 	{
-		KeyEntry key;
-		key.keyCode = macroKey.second.keyCode;
-		key.keyCodeStr = std::to_string(key.keyCode);
-		key.name = keyCodeArray[key.keyCode].name;
+		KeyEntry key = KeyCodeToEntry(macroKey.second.keyCode);
 		keys.push_back(key);
 		ret = true;
 	}
@@ -333,14 +336,11 @@ bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackIdx, Playback
 {
 	bool ret = false;
 
+	std::unique_lock<std::shared_mutex> lock(protectSettings);
+
 	MacroKey macroKey;
-	if (GetMacroKey(macroKeyCode, macroKey))
+	if (GetMacro_internal(macroKeyCode, macroKey))
 	{
-		// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
-		std::unique_lock<std::shared_mutex> lock(protectSettings);
-
-		playbackKey.name = keyCodeArray[playbackKey.keyCode].name;
-
 		if (playbackIdx < 0)
 		{
 			macroKey.keys.push_back(playbackKey);
@@ -373,23 +373,19 @@ bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, Playback
 {
 	bool ret = false;
 
+	std::unique_lock<std::shared_mutex> lock(protectSettings);
 
 	if(playbackIdx >= 0)
 	{
 		MacroKey macroKey;
-		if (GetMacroKey(macroKeyCode, macroKey))
-		{
-			// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
-			std::unique_lock<std::shared_mutex> lock(protectSettings);
-
+		if (GetMacro_internal(macroKeyCode, macroKey))
+		{	
 			// playbackIdx is a zero based index and must be less
 			// then the number of items in the vector by 1
 			int numberOfPlaybackKeys = (int) macroKey.keys.size();
 			if (numberOfPlaybackKeys > playbackIdx)
 			{
 				playbackKey = macroKey.keys[playbackIdx];
-				playbackKey.keyCodeStr = std::to_string(playbackKey.keyCode);
-				playbackKey.name = keyCodeArray[playbackKey.keyCode].name;
 				ret = true;
 			}
 		}
@@ -402,12 +398,11 @@ bool KeySettings::DeletePlaybackKey(uint8_t macroKeyCode, int playbackIdx)
 {
 	bool ret = false;
 
-	MacroKey macroKey;
-	if (GetMacroKey(macroKeyCode, macroKey))
-	{
-		// Mutex need to be locked after 'GetMacroKey' because this function locks the mutex
-		std::unique_lock<std::shared_mutex> lock(protectSettings);
+	std::unique_lock<std::shared_mutex> lock(protectSettings);
 
+	MacroKey macroKey;
+	if (GetMacro_internal(macroKeyCode, macroKey))
+	{
 		if (playbackIdx >= 0)
 		{
 			// playbackIdx is a zero based index and must be less
