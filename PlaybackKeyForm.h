@@ -265,7 +265,7 @@ namespace GameMacro {
 
 			if (m_playbackIdx > 0)
 			{
-				if (globalSettings.GetPlaybackKey(m_macroKeyCode, m_playbackIdx, playbackKey))
+				if (globalSettings.Playback_Get(m_macroKeyCode, m_playbackIdx, playbackKey))
 				{
 					// Gets the orginal key
 				}
@@ -283,7 +283,7 @@ namespace GameMacro {
 			playbackKey.bShift  = checkBoxShift->Checked;
 			playbackKey.bWKey   = checkBoxWindows->Checked;
 			
-			if (globalSettings.AddPlaybackKey(m_macroKeyCode, m_playbackIdx, playbackKey))
+			if (globalSettings.Playback_Add(m_macroKeyCode, m_playbackIdx, playbackKey))
 			{
 				DialogResult = System::Windows::Forms::DialogResult::OK;
 				Close();
@@ -300,7 +300,7 @@ namespace GameMacro {
 			}
 			else
 			{
-				if (globalSettings.DeletePlaybackKey(m_macroKeyCode, m_playbackIdx))
+				if (globalSettings.Playback_Delete(m_macroKeyCode, m_playbackIdx))
 				{
 					DialogResult = System::Windows::Forms::DialogResult::OK;
 					Close();
@@ -337,7 +337,7 @@ namespace GameMacro {
 				if (playbackIdx >= 0)
 				{
 					KeySettings::PlaybackKey playbackKey;
-					if (globalSettings.GetPlaybackKey(m_macroKeyCode, playbackIdx, playbackKey))
+					if (globalSettings.Playback_Get(m_macroKeyCode, playbackIdx, playbackKey))
 					{
 						keyCodeOfPlaybackKey = playbackKey.keyCode;
 						checkBoxCtrl->Checked = playbackKey.bCtrl;
@@ -349,7 +349,7 @@ namespace GameMacro {
 				}
 
 				std::vector<KeySettings::KeyEntry> keys;
-				if (globalSettings.GetAvailablePlaybackKeys(keys))
+				if (globalSettings.Playback_ListAvailable(keys))
 				{
 					playbackKeyList->Items->Clear();
 

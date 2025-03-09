@@ -58,7 +58,7 @@ void BackgroundProcessing::DoWork()
 		while (m_bContinue && (macroKeyCode != 0))
 		{
 			KeySettings::MacroKey macroKey;
-			if (globalSettings.GetMacroKey(macroKeyCode, macroKey))
+			if (globalSettings.Macro_Get(macroKeyCode, macroKey))
 			{
 				if (macroKey.keys.size() > 0) // Macros need keys to playback
 				{
@@ -97,7 +97,7 @@ uint8_t BackgroundProcessing::MacroKeyWasPressed()
 				// bitwise and with 0x80
 				if (keyboardState[i] & 0x80)
 				{
-					if (globalSettings.IsActiveMacroKey(i))
+					if (globalSettings.Macro_IsActive(i))
 					{
 						//DebugKeyPressed(i, keyboardState); // This is only needed for debug
 						retKeyCode = i;

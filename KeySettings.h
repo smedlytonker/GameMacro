@@ -41,27 +41,27 @@ public:
 	bool Init(WCHAR* fileName); // filename only (i.e. no path)
 		
 	// Macro APIs
-	bool GetAvailableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode); // Returns keys that can be  used as macro keys
-	bool GetMacroKeyList(std::vector<KeyEntry>& list); // Returns all active macros
-	bool AddMacroKey(MacroKey& macroKey);
-	bool DeleteMacroKey(uint8_t keyCode);
-	bool IsActiveMacroKey(uint8_t keyCode);
-	bool GetMacroKey(uint8_t keyCode, MacroKey& macroKey);
+	bool Macro_ListAvailable(std::vector<KeyEntry>& keys, uint8_t currentKeyCode); // Returns keys that can be  used as macro keys
+	bool Macro_ListActive(std::vector<KeyEntry>& list); // Returns all active macros
+	bool Macro_Add(MacroKey& macroKey);
+	bool Macro_Delete(uint8_t keyCode);
+	bool Macro_IsActive(uint8_t keyCode);
+	bool Macro_Get(uint8_t keyCode, MacroKey& macroKey);
 
 	// Playback key APIs
-	bool GetAvailablePlaybackKeys(std::vector<KeyEntry>& keys); // Returns keys that can be used as a playback keys
-	bool GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
-	bool AddPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
-	bool DeletePlaybackKey(uint8_t macroKeyCode, int playbackIdx);
+	bool Playback_ListAvailable(std::vector<KeyEntry>& keys); // Returns keys that can be used as a playback keys
+	bool Playback_Get(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
+	bool Playback_Add(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey);
+	bool Playback_Delete(uint8_t macroKeyCode, int playbackIdx);
 	
 private:
 	// Parse Ini file
-	bool ParseSection(CSimpleIniA& m_ini, MacroKey& key, const char* sectionName);
-	bool ParseIni(CSimpleIniA& m_ini);
+	bool Ini_Parse(CSimpleIniA& m_ini);
+	bool Ini_ParseSection(CSimpleIniA& m_ini, MacroKey& key, const char* sectionName);
 	std::vector<std::string> Split(const char* str, char delimiter);
 
 	// Misc
-	bool GetMacro_internal(uint8_t keyCode, MacroKey& macroKey);
+	bool GetMacro(uint8_t keyCode, MacroKey& macroKey);
 	KeyEntry KeySettings::KeyCodeToEntry(uint8_t keyCode);
 
 private:

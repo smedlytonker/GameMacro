@@ -260,7 +260,7 @@ namespace GameMacro {
 				return;
 			}
 
-			if (globalSettings.DeleteMacroKey(m_keyCode))
+			if (globalSettings.Macro_Delete(m_keyCode))
 			{
 				DialogResult = System::Windows::Forms::DialogResult::OK;
 				Close();
@@ -277,7 +277,7 @@ namespace GameMacro {
 			}
 
 			KeySettings::MacroKey macroKey;
-			if (!globalSettings.GetMacroKey(m_keyCode, macroKey))
+			if (!globalSettings.Macro_Get(m_keyCode, macroKey))
 			{
 				// This should not happen
 				errorProviderMacro->SetError(macroKeyList, "Macro entry does not exist???");
@@ -287,7 +287,7 @@ namespace GameMacro {
 			else
 			{
 				macroKey.bLoop = checkBoxLoop->Checked;
-				if (globalSettings.AddMacroKey(macroKey))
+				if (globalSettings.Macro_Add(macroKey))
 				{
 					DialogResult = System::Windows::Forms::DialogResult::OK;
 					Close();
@@ -300,7 +300,7 @@ namespace GameMacro {
 			if (m_keyCode == 0)
 			{
 				std::vector<KeySettings::KeyEntry> macroKeys;
-				if (globalSettings.GetAvailableMacroKeys(macroKeys, m_keyCode))
+				if (globalSettings.Macro_ListAvailable(macroKeys, m_keyCode))
 				{
 					macroKeyList->Items->Clear();
 					for (auto key : macroKeys)
@@ -315,10 +315,10 @@ namespace GameMacro {
 			else
 			{
 				KeySettings::MacroKey macroKey;
-				if (globalSettings.GetMacroKey(m_keyCode, macroKey))
+				if (globalSettings.Macro_Get(m_keyCode, macroKey))
 				{
 					std::vector<KeySettings::KeyEntry> macroKeys;
-					if (globalSettings.GetAvailableMacroKeys(macroKeys, m_keyCode))
+					if (globalSettings.Macro_ListAvailable(macroKeys, m_keyCode))
 					{
 						checkBoxLoop->Checked = macroKey.bLoop;
 
@@ -389,7 +389,7 @@ namespace GameMacro {
 			if (m_keyCode != item->keyCode)
 			{
 				KeySettings::MacroKey macroKey;
-				if (globalSettings.GetMacroKey(m_keyCode, macroKey))
+				if (globalSettings.Macro_Get(m_keyCode, macroKey))
 				{
 					// Get settings from old macro before we delete it
 					// that way we have all the playback keys. The
@@ -399,14 +399,14 @@ namespace GameMacro {
 				if (m_keyCode > 0)
 				{
 					// Delete old macro from settings file
-					globalSettings.DeleteMacroKey(m_keyCode);
+					globalSettings.Macro_Delete(m_keyCode);
 				}
 
 				// Add new macro
 				m_keyCode = item->keyCode;
 				macroKey.keyCode = m_keyCode;
 				macroKey.bLoop = checkBoxLoop->Checked;
-				globalSettings.AddMacroKey(macroKey);
+				globalSettings.Macro_Add(macroKey);
 			}
 		}
 

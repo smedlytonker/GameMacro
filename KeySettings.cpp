@@ -9,13 +9,14 @@ bool KeySettings::Init(WCHAR* fileNameOnly)
 {
 	bool ret = false;
 
+	// Return full patch to this program
 	WCHAR path[MAX_PATH] = { 0 };
 	if (GetModuleFileName(nullptr, path, MAX_PATH))
 	{
 		WCHAR* pStrPos = std::wcsrchr(path, '\\');
 		if (pStrPos)
 		{
-			// Strip executable file name & get just the path
+			// Strip off program name leaving just the path
 			*pStrPos = (WCHAR) 0;
 
 			// Assume that the .ini file is in the same folder as 
@@ -24,7 +25,7 @@ bool KeySettings::Init(WCHAR* fileNameOnly)
 			SI_Error rc = m_ini.LoadFile(m_fullPathToFile);
 			if (rc == SI_OK)
 			{
-				ret = ParseIni(m_ini);
+				ret = Ini_Parse(m_ini);
 			}
 		}
 	}
@@ -45,7 +46,7 @@ std::vector<std::string> KeySettings::Split(const char* str, char delimiter)
 	return tokens;
 }
 
-bool KeySettings::ParseSection(CSimpleIniA& ini, MacroKey& key, const char* sectionName)
+bool KeySettings::Ini_ParseSection(CSimpleIniA& ini, MacroKey& key, const char* sectionName)
 {
 	bool ret = false;
 
@@ -84,7 +85,7 @@ bool KeySettings::ParseSection(CSimpleIniA& ini, MacroKey& key, const char* sect
 	return ret;
 }
 
-bool KeySettings::ParseIni(CSimpleIniA& ini)
+bool KeySettings::Ini_Parse(CSimpleIniA& ini)
 {
 	bool ret = false;
 
@@ -100,7 +101,7 @@ bool KeySettings::ParseIni(CSimpleIniA& ini)
 		{
 			MacroKey macroKey;
 			macroKey.keyCode = (uint8_t)key;
-			if (ParseSection(ini, macroKey, section.pItem))
+			if (Ini_ParseSection(ini, macroKey, section.pItem))
 			{
 				m_macroKeys[macroKey.keyCode] = macroKey;
 				m_macroIsActive[macroKey.keyCode] = 1;
@@ -123,7 +124,7 @@ KeySettings::KeyEntry KeySettings::KeyCodeToEntry(uint8_t keyCode)
 	return key;
 }
 
-bool KeySettings::GetAvailableMacroKeys(std::vector<KeyEntry>& keys, uint8_t currentKeyCode)
+bool KeySettings::Macro_ListAvailable(std::vector<KeyEntry>& keys, uint8_t currentKeyCode)
 {
 	bool ret = false;
 
@@ -159,7 +160,7 @@ bool KeySettings::GetAvailableMacroKeys(std::vector<KeyEntry>& keys, uint8_t cur
 	return ret;
 }
 
-bool KeySettings::GetAvailablePlaybackKeys(std::vector<KeyEntry>& keys)
+bool KeySettings::Playback_ListAvailable(std::vector<KeyEntry>& keys)
 {
 	bool ret = false;
 
@@ -179,7 +180,7 @@ bool KeySettings::GetAvailablePlaybackKeys(std::vector<KeyEntry>& keys)
 	return ret;
 }
 
-bool KeySettings::AddMacroKey(MacroKey& macroKey)
+bool KeySettings::Macro_Add(MacroKey& macroKey)
 {
 	bool ret = false;
 
@@ -239,7 +240,7 @@ bool KeySettings::AddMacroKey(MacroKey& macroKey)
 	return ret;
 }
 
-bool KeySettings::DeleteMacroKey(uint8_t keyCode)
+bool KeySettings::Macro_Delete(uint8_t keyCode)
 {
 	bool ret = false;
 
@@ -264,7 +265,7 @@ bool KeySettings::DeleteMacroKey(uint8_t keyCode)
 	return ret;
 }
 
-bool KeySettings::IsActiveMacroKey(uint8_t keyCode)
+bool KeySettings::Macro_IsActive(uint8_t keyCode)
 {
 	// This is a lookup table is much faster than looking it up in
 	// std::map 'm_macroKeys'. This is because the map has to be protected 
@@ -273,7 +274,7 @@ bool KeySettings::IsActiveMacroKey(uint8_t keyCode)
 	return (m_macroIsActive[keyCode] > 0) ? true : false;
 }
 
-bool KeySettings::GetMacro_internal(uint8_t keyCode, MacroKey& macroKey)
+bool KeySettings::GetMacro(uint8_t keyCode, MacroKey& macroKey)
 {
 	bool ret = false;
 
@@ -306,17 +307,17 @@ bool KeySettings::GetMacro_internal(uint8_t keyCode, MacroKey& macroKey)
 	return ret;
 }
 
-bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey)
+bool KeySettings::Macro_Get(uint8_t keyCode, MacroKey& macroKey)
 {
 	bool ret = false;
 
 	std::unique_lock<std::shared_mutex> lock(protectSettings);
-	ret = GetMacro_internal(keyCode, macroKey);
+	ret = GetMacro(keyCode, macroKey);
 
 	return ret;
 }
 
-bool KeySettings::GetMacroKeyList(std::vector<KeyEntry>& keys)
+bool KeySettings::Macro_ListActive(std::vector<KeyEntry>& keys)
 {
 	bool ret = false;
 
@@ -332,14 +333,14 @@ bool KeySettings::GetMacroKeyList(std::vector<KeyEntry>& keys)
 	return ret;
 }
 
-bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey)
+bool KeySettings::Playback_Add(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey)
 {
 	bool ret = false;
 
 	std::unique_lock<std::shared_mutex> lock(protectSettings);
 
 	MacroKey macroKey;
-	if (GetMacro_internal(macroKeyCode, macroKey))
+	if (GetMacro(macroKeyCode, macroKey))
 	{
 		if (playbackIdx < 0)
 		{
@@ -369,7 +370,7 @@ bool KeySettings::AddPlaybackKey(uint8_t macroKeyCode, int playbackIdx, Playback
 	return ret;
 }
 
-bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey)
+bool KeySettings::Playback_Get(uint8_t macroKeyCode, int playbackIdx, PlaybackKey& playbackKey)
 {
 	bool ret = false;
 
@@ -378,7 +379,7 @@ bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, Playback
 	if(playbackIdx >= 0)
 	{
 		MacroKey macroKey;
-		if (GetMacro_internal(macroKeyCode, macroKey))
+		if (GetMacro(macroKeyCode, macroKey))
 		{	
 			// playbackIdx is a zero based index and must be less
 			// then the number of items in the vector by 1
@@ -394,14 +395,14 @@ bool KeySettings::GetPlaybackKey(uint8_t macroKeyCode, int playbackIdx, Playback
 	return ret;
 }
 
-bool KeySettings::DeletePlaybackKey(uint8_t macroKeyCode, int playbackIdx)
+bool KeySettings::Playback_Delete(uint8_t macroKeyCode, int playbackIdx)
 {
 	bool ret = false;
 
 	std::unique_lock<std::shared_mutex> lock(protectSettings);
 
 	MacroKey macroKey;
-	if (GetMacro_internal(macroKeyCode, macroKey))
+	if (GetMacro(macroKeyCode, macroKey))
 	{
 		if (playbackIdx >= 0)
 		{
