@@ -282,7 +282,7 @@ bool KeySettings::DeleteMacroKey(uint8_t keyCode)
 
 bool KeySettings::IsActiveMacroKey(uint8_t keyCode)
 {
-	// This is a lookup table is much faster than looking it up int 
+	// This is a lookup table is much faster than looking it up in
 	// std::map 'm_macroKeys'. This is because the map has to be protected 
 	// with a mutex since this is a multi-thread app. So this should lower
 	// the overhead of checking.

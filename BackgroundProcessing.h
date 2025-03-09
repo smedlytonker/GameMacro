@@ -19,7 +19,8 @@ private:
 	uint8_t BackgroundProcessing::MacroKeyWasPressed();
 
 private:
-	bool m_bContinue = false;
-	std::thread m_mainThread;
+	std::thread    m_mainThread;
+	bool           m_bContinue = false;
+	const uint32_t sleepTimeInMS = 1;
 
 };

@@ -2,7 +2,7 @@
 
 #pragma comment(lib, "User32.lib")
 
-#define SLEEP_TIME_IN_MS 1
+#define NO_DELAY_AFTER_LAST_KEY
 
 bool BackgroundProcessing::Create()
 {
@@ -48,6 +48,9 @@ void BackgroundProcessing::PlayKey(KeySettings::PlaybackKey key)
 	sprintf_s(szDbg, _countof(szDbg) - 1, "Key: %s\r\n", name);
 	OutputDebugStringA(szDbg);
 #endif
+
+	// *** Tyler put your code here ***
+	//
 	}
 
 uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
@@ -70,6 +73,19 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 		{
 			startPlayback = GetTickCount();
 			PlayKey(macroKey.keys[keyIndex]);
+			
+#ifdef NO_DELAY_AFTER_LAST_KEY
+			if ((keyIndex + 1) >= nKeys)
+			{
+				if (!macroKey.bLoop)
+				{
+#ifdef _DEBUG
+					OutputDebugStringA("Done(1)\r\n");
+#endif
+					break;
+				}
+			}
+#endif
 		}
 		else
 		{
@@ -93,14 +109,14 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 			else
 			{
 #ifdef _DEBUG
-				OutputDebugStringA("Done\r\n");
+				OutputDebugStringA("Done(2)\r\n");
 #endif
-				break; // Done
+				break;
 			}
 		}
 		else
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_IN_MS));
+			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeInMS));
 
 			macroKeyCode = MacroKeyWasPressed();
 			if (macroKeyCode != 0)
@@ -244,6 +260,6 @@ void BackgroundProcessing::DoWork()
 			}
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_IN_MS));
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeInMS));
 	}
 }

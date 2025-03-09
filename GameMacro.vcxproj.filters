@@ -20,11 +20,11 @@
     <ClCompile Include="BackgroundProcessing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="KeySettings.cpp">
-      <Filter>Settings</Filter>
-    </ClCompile>
     <ClCompile Include="SimpleIni\ConvertUTF.cpp">
       <Filter>Settings</Filter>
+    </ClCompile>
+    <ClCompile Include="KeySettings.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -33,9 +33,6 @@
     </ClInclude>
     <ClInclude Include="BackgroundProcessing.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="KeySettings.h">
-      <Filter>Settings</Filter>
     </ClInclude>
     <ClInclude Include="SimpleIni\ConvertUTF.h">
       <Filter>Settings</Filter>
@@ -51,6 +48,9 @@
     </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeySettings.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
