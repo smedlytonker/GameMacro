@@ -1,5 +1,5 @@
 #include "MainForm.h"
-#include "WorkerThread.h"
+#include "BackgroundProcessing.h"
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -13,16 +13,16 @@ using namespace GameMacro;
 
 int main(array<String^>^ args)
 {
-	WorkerThread workerThread;
+	BackgroundProcessing background;
 
-	if (workerThread.Create())
+	if (background.Create())
 	{
 		Application::EnableVisualStyles();
 		Application::SetCompatibleTextRenderingDefault(false);
 		MainForm form;
 		Application::Run(% form);
 
-		workerThread.Destroy();
+		background.Destroy();
 	}
 
 	return 0;

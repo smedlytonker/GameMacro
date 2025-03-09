@@ -134,7 +134,7 @@
     <ClCompile Include="KeySettings.cpp" />
     <ClCompile Include="MainForm.cpp" />
     <ClCompile Include="SimpleIni\ConvertUTF.cpp" />
-    <ClCompile Include="WorkerThread.cpp" />
+    <ClCompile Include="BackgroundProcessing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -150,7 +150,7 @@
     </ClInclude>
     <ClInclude Include="SimpleIni\ConvertUTF.h" />
     <ClInclude Include="SimpleIni\SimpleIni.h" />
-    <ClInclude Include="WorkerThread.h" />
+    <ClInclude Include="BackgroundProcessing.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MacroKeyForm.resx">

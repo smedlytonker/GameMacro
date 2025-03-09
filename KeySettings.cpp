@@ -282,9 +282,10 @@ bool KeySettings::DeleteMacroKey(uint8_t keyCode)
 
 bool KeySettings::IsActiveMacroKey(uint8_t keyCode)
 {
-	// This is a lookup table is faster than looking up the macro in a std::map
-	// because the map has to be protected with a mutex. So this should lower the 
-	// overhead of checking
+	// This is a lookup table is much faster than looking it up int 
+	// std::map 'm_macroKeys'. This is because the map has to be protected 
+	// with a mutex since this is a multi-thread app. So this should lower
+	// the overhead of checking.
 
 	return (m_macroIsActive[keyCode] > 0) ? true : false;
 }
@@ -298,7 +299,13 @@ bool KeySettings::GetMacroKey(uint8_t keyCode, MacroKey& macroKey, bool bNoDecod
 	if (keyCode > 0)
 	{
 		auto it = m_macroKeys.find(keyCode);
-		if (it != m_macroKeys.end())
+		if (it == m_macroKeys.end())
+		{
+			// Error - 'm_macroKeys' & 'macroIsActive' should match 
+			// each other. Some how they got out of sync.
+			m_macroIsActive[keyCode] = 0; // Make it match
+		}
+		else
 		{
 			macroKey = it->second;
 			m_macroIsActive[keyCode] = 1;

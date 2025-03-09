@@ -17,7 +17,7 @@
     <ClCompile Include="MainForm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WorkerThread.cpp">
+    <ClCompile Include="BackgroundProcessing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="KeySettings.cpp">
@@ -31,7 +31,7 @@
     <ClInclude Include="MainForm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WorkerThread.h">
+    <ClInclude Include="BackgroundProcessing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="KeySettings.h">
