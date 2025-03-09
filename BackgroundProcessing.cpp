@@ -1,4 +1,5 @@
 #include "BackgroundProcessing.h"
+#include "StopWatch.h"
 
 #pragma comment(lib, "User32.lib")
 
@@ -35,6 +36,7 @@ void BackgroundProcessing::DebugMsg(char* szDbg)
 #ifndef _DEBUG
 	UNREFERENCED_PARAMETER(szDbg);
 #else
+	// Sends to the 'Output' Windows in Visual Studio
 	OutputDebugStringA(szDbg);
 #endif
 }
@@ -172,10 +174,10 @@ uint8_t BackgroundProcessing::MacroKeyWasPressed()
 
 uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 {
-	uint32_t startPlayback = 0;
-	uint8_t  keyIndex      = 0;
-	uint8_t  macroKeyCode  = 0;
-	uint8_t  nKeys         = (uint8_t) macroKey.keys.size();
+	Stopwatch stopWatch;
+	uint8_t   keyIndex   = 0;
+	uint8_t   retKeyCode = 0;
+	uint8_t   nKeys      = (uint8_t) macroKey.keys.size();
 	
 #ifdef _DEBUG
 	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
@@ -188,9 +190,19 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 
 	while (m_bContinue && (keyIndex < nKeys))
 	{
-		if (startPlayback == 0)
+		if (stopWatch.IsStarted())
 		{
-			startPlayback = GetTickCount();
+			if (stopWatch.Elapsed() >= macroKey.keys[keyIndex].delayInMS)
+			{
+				//Waited the delay amount following the key.
+				//Its time to advance to the next key.
+				stopWatch.Stop();
+				keyIndex++;
+			}
+		}
+		else
+		{
+			stopWatch.Start();
 			PlayKey(macroKey.keys[keyIndex]);
 			
 #ifdef NO_DELAY_AFTER_LAST_KEY
@@ -205,20 +217,6 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 			}
 #endif
 		}
-		else
-		{
-			// I don't want to use the 64 bit version of GetTickCount
-			#pragma warning( disable : 28159)
-
-			uint32_t elapsed = GetTickCount() - startPlayback;
-			if (elapsed >= macroKey.keys[keyIndex].delayInMS)
-			{
-				//Waited the delay amount following the key.
-				//Its time to advance to the next key.
-				startPlayback = 0;
-				keyIndex++;
-			}
-		}
 
 		if (keyIndex >= nKeys)
 		{
@@ -230,7 +228,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 				// If this is a loop macro, start over 
 				// from the first key
 				keyIndex = 0;
-				startPlayback = 0;
+				stopWatch.Stop();
 			}
 			else
 			{
@@ -252,8 +250,8 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 
 			// Check to see if a macro key is pressed while 
 			// playing back the current macro
-			macroKeyCode = MacroKeyWasPressed();
-			if (macroKeyCode != 0)
+			retKeyCode = MacroKeyWasPressed();
+			if (retKeyCode != 0)
 			{
 				if (!macroKey.bLoop)
 				{
@@ -267,14 +265,14 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 				{
 					// If we are playing a loop macro then
 					// stop playback of the current macro
-					if (macroKeyCode == macroKey.keyCode)
+					if (retKeyCode == macroKey.keyCode)
 					{
 						// If they pressed the same key as the 
 						// current loop macro, make sure this 
 						// just cancels the current macro
 						// and does not start the macro
 						// re-playing.
-						macroKeyCode = 0;
+						retKeyCode = 0;
 #ifdef _DEBUG
 						DebugMsg("Loop ended\r\n");
 #endif
@@ -286,7 +284,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 		}
 	}
 
-	return macroKeyCode;
+	return retKeyCode;
 }
 
 void BackgroundProcessing::PlayKey(KeySettings::PlaybackKey key)

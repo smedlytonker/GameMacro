@@ -151,6 +151,7 @@
     <ClInclude Include="SimpleIni\ConvertUTF.h" />
     <ClInclude Include="SimpleIni\SimpleIni.h" />
     <ClInclude Include="BackgroundProcessing.h" />
+    <ClInclude Include="Stopwatch.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MacroKeyForm.resx">
