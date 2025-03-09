@@ -203,7 +203,11 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 				{
 					// If we are playing a loop macro then
 					// stop playback of the current macro
-					if (retKeyCode == macroKey.keyCode)
+					if (retKeyCode != macroKey.keyCode)
+					{
+						DebugMsg("Cancelled\r\n");
+					}
+					else
 					{
 						// If they pressed the same key as the 
 						// current loop macro, make sure this 
