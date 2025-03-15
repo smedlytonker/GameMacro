@@ -1,5 +1,6 @@
 #include "BackgroundProcessing.h"
 #include "StopWatch.h"
+#include "SimulateKey.h"
 
 #pragma comment(lib, "User32.lib")
 
@@ -31,16 +32,6 @@ bool BackgroundProcessing::Destroy()
 	return true;
 }
 
-void BackgroundProcessing::DebugMsg(char* szDbg)
-{
-#ifndef _DEBUG
-	UNREFERENCED_PARAMETER(szDbg);
-#else
-	// Sends to the 'Output' Windows in Visual Studio
-	OutputDebugStringA(szDbg);
-#endif
-}
-
 void BackgroundProcessing::Work(BackgroundProcessing* pThis)
 {
 	if (pThis != nullptr)
@@ -53,23 +44,23 @@ void BackgroundProcessing::DoWork()
 {
 	while (m_bContinue)
 	{
-		uint8_t macroKeyCode = MacroKeyWasPressed();
+		uint8_t keyCode = MacroKeyWasPressed();
 
-		while (m_bContinue && (macroKeyCode != 0))
+		while (m_bContinue && (keyCode != 0))
 		{
 			KeySettings::MacroKey macroKey;
-			if (globalSettings.Macro_Get(macroKeyCode, macroKey))
+			if (globalSettings.Macro_Get(keyCode, macroKey))
 			{
 				if (macroKey.keys.size() > 0) // Macros need keys to playback
 				{
-					macroKeyCode = ProcessMacroKey(macroKey);
+					keyCode = ProcessMacroKey(macroKey);
 				}
 			}
 		}
 
 		if (m_bContinue)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeInMS));
+			SleeInMS(1);
 		}
 	}
 }
@@ -91,10 +82,8 @@ uint8_t BackgroundProcessing::MacroKeyWasPressed()
 			//for (int i = 0; (i < 256) && m_bContinue; ++i)
 			for (int i = 1; (i < 0x7F) && m_bContinue; ++i) // Only go thru keys that are on a regular US keyboard
 			{
-				//https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate?redirectedfrom=MSDN
-				// If the high order bit is 1, the key is down; 
-				// otherwise it is up. To test if key is down 
-				// bitwise and with 0x80
+				// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate?redirectedfrom=MSDN
+				// If the high order bit is 1, the key is down; otherwise it is up.
 				if (keyboardState[i] & 0x80)
 				{
 					if (globalSettings.Macro_IsActive(i))
@@ -118,110 +107,98 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 	uint8_t   retKeyCode = 0;
 	uint8_t   nKeys      = (uint8_t) macroKey.keys.size();
 	
-#ifdef _DEBUG
-	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
-	// have to use sprintf_s instead
-	char szDbg[128] = { 0 };
-	sprintf_s(szDbg, _countof(szDbg) - 1, "Macro started: %s\r\n", macroKey.name.c_str());
-	DebugMsg(szDbg);
-#endif
+	Logging::DebugMsg("Macro started: %s", macroKey.name.c_str());
 
 	while (m_bContinue && (keyIndex < nKeys))
 	{
-		if (stopWatch.IsStarted())
+		if (!stopWatch.IsStarted())
 		{
-			if (stopWatch.Elapsed() >= macroKey.keys[keyIndex].delayInMS)
+			stopWatch.Start();
+			PlayKey(macroKey.keys[keyIndex]);
+		}
+		else
+		{
+			uint32_t elapsedTime   = stopWatch.Elapsed();
+			if (elapsedTime >= macroKey.keys[keyIndex].delayInMS)
 			{
 				//Waited the delay amount following the key.
 				//Its time to advance to the next key.
 				stopWatch.Stop();
 				keyIndex++;
+
+				Logging::DebugMsg("Delay: %u", elapsedTime);
+				
+				if (keyIndex < nKeys)
+				{
+					// Prevents adding unwanted delay
+					continue;
+				}
 			}
-		}
-		else
-		{
-			stopWatch.Start();
-			PlayKey(macroKey.keys[keyIndex]);
-			
-#ifdef NO_DELAY_AFTER_LAST_KEY
-			//If we don't want a delay after the last key 
-			//played when its not a looping macro.
-			if (((keyIndex + 1) >= nKeys) && !macroKey.bLoop)
-			{
-#ifdef _DEBUG
-				DebugMsg("Done(1)\r\n");
-#endif
-				break;
-			}
-#endif
 		}
 
 		if (keyIndex >= nKeys)
 		{
-			// We have reached the end of the keys to
-			// playback
-
-			if (macroKey.bLoop)
+			// We have reached the end of the keys to playback
+			if (!macroKey.bLoop)
 			{
-				// If this is a loop macro, start over 
-				// from the first key
-				keyIndex = 0;
-				stopWatch.Stop();
+				// Finished playing macro - exit
+				Logging::DebugMsg("Done");
+				break;
 			}
 			else
 			{
-				// Finished playing macro - exit
-			
-				// If we exit playing the macro here this means 
-				// we waited for the delay at the end of the 
-				// last key. To prevent this:
-				// #define NO_DELAY_AFTER_LAST_KEY
-#ifdef _DEBUG
-				DebugMsg("Done(2)\r\n");
-#endif
-				break;
+				// If this is a loop macro, start over from the 
+				//first key
+				keyIndex = 0;
+				stopWatch.Stop();
 			}
 		}
 		else
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeInMS));
+			SleeInMS(1);
 
 			// Check to see if a macro key is pressed while 
 			// playing back the current macro
 			retKeyCode = MacroKeyWasPressed();
 			if (retKeyCode != 0)
 			{
-				if (!macroKey.bLoop)
+				if ((retKeyCode == macroKey.keys[keyIndex].keyCode) ||
+					(retKeyCode == macroKey.keyCode))
 				{
-					// Current macro is cancled to start
-					// playing another macro
-#ifdef _DEBUG
-					DebugMsg("Cancelled\r\n");
-#endif
+					// Don't process key we are playing back, or the
+					// macro key because its still being held down
+					retKeyCode = 0;
 				}
 				else
 				{
-					// If we are playing a loop macro then
-					// stop playback of the current macro
-					if (retKeyCode != macroKey.keyCode)
+					if (!macroKey.bLoop)
 					{
-						DebugMsg("Cancelled\r\n");
+						// Current macro is cancled to start
+						// playing another macro
+						Logging::DebugMsg("Cancelled");
 					}
 					else
 					{
-						// If they pressed the same key as the 
-						// current loop macro, make sure this 
-						// just cancels the current macro
-						// and does not start the macro
-						// re-playing.
-						retKeyCode = 0;
-#ifdef _DEBUG
-						DebugMsg("Loop ended\r\n");
-#endif
+						// If we are playing a loop macro then
+						// stop playback of the current macro
+						if (retKeyCode != macroKey.keyCode)
+						{
+							Logging::DebugMsg("Cancelled");
+						}
+						else
+						{
+							// If they pressed the same key as the 
+							// current loop macro, make sure this 
+							// just cancels the current macro
+							// and does not start the macro
+							// re-playing.
+							retKeyCode = 0;
+							Logging::DebugMsg("Loop ended");
+						}
 					}
-				}
 
-				break;
+					break;
+				}
 			}
 		}
 	}
@@ -231,16 +208,7 @@ uint8_t BackgroundProcessing::ProcessMacroKey(KeySettings::MacroKey macroKey)
 
 void BackgroundProcessing::PlayKey(KeySettings::PlaybackKey key)
 {
-#ifndef _DEBUG
-	UNREFERENCED_PARAMETER(key);
-#else
-	// Can't use 'std::format' in c++20 because of the C++/CLI mode does not support C++ versions newer than C++17
-	// have to use sprintf_s instead
-	char szDbg[128] = { 0 };
-	sprintf_s(szDbg, _countof(szDbg) - 1, "Key: %s\r\n", key.name.c_str());
-	DebugMsg(szDbg);
+#if 1
+	SimulateKey simulateKey(key.keyCode, key.bExtended, key.bShift, key.bCtrl, key.bAlt, key.bWKey);
 #endif
-
-	// *** Tyler put your code here ***
-	//
 }

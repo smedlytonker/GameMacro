@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Logging.h" />
     <ClInclude Include="MacroKeyForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -151,6 +152,7 @@
     <ClInclude Include="SimpleIni\ConvertUTF.h" />
     <ClInclude Include="SimpleIni\SimpleIni.h" />
     <ClInclude Include="BackgroundProcessing.h" />
+    <ClInclude Include="SimulateKey.h" />
     <ClInclude Include="Stopwatch.h" />
   </ItemGroup>
   <ItemGroup>

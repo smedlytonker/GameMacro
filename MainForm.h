@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Common.h"
 #include "MacroKeyForm.h"
 
 namespace GameMacro {
@@ -75,7 +74,7 @@ namespace GameMacro {
 			this->macroList->HideSelection = false;
 			this->macroList->Location = System::Drawing::Point(12, 12);
 			this->macroList->Name = L"macroList";
-			this->macroList->Size = System::Drawing::Size(567, 224);
+			this->macroList->Size = System::Drawing::Size(573, 317);
 			this->macroList->TabIndex = 0;
 			this->macroList->UseCompatibleStateImageBehavior = false;
 			this->macroList->View = System::Windows::Forms::View::Details;
@@ -94,7 +93,7 @@ namespace GameMacro {
 			// addMacro
 			// 
 			this->addMacro->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
-			this->addMacro->Location = System::Drawing::Point(12, 253);
+			this->addMacro->Location = System::Drawing::Point(12, 346);
 			this->addMacro->Name = L"addMacro";
 			this->addMacro->Size = System::Drawing::Size(175, 46);
 			this->addMacro->TabIndex = 1;
@@ -106,7 +105,7 @@ namespace GameMacro {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(14, 28);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(591, 311);
+			this->ClientSize = System::Drawing::Size(597, 404);
 			this->Controls->Add(this->addMacro);
 			this->Controls->Add(this->macroList);
 			this->Font = (gcnew System::Drawing::Font(L"Verdana", 13.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,

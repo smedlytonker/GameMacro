@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include <regex>
 
 namespace GameMacro {
 
@@ -230,8 +231,6 @@ namespace GameMacro {
 			}
 
 			KeyItem^ item = (KeyItem^) playbackKeyList->SelectedItem;
-			KeySettings::PlaybackKey playbackKey;
-
 			if (item->keyCode == 0)
 			{
 				errorProviderKey->SetError(playbackKeyList, "No key selected");
@@ -239,29 +238,31 @@ namespace GameMacro {
 				return;
 			}
 
-			playbackKey.delayInMSStr = ConvertToUnmanagedString(textBoxDelay->Text);
-			if (playbackKey.delayInMSStr.empty())
+			std::string delayInMSStr = ConvertToUnmanagedString(textBoxDelay->Text);
+			if (delayInMSStr.empty())
 			{
-				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value");
+				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value - not set");
 				textBoxDelay->Focus();
 				return;
 			}
 
-			playbackKey.delayInMSStr = std::regex_replace(playbackKey.delayInMSStr, std::regex("[^0-9]"), "");
-			if (playbackKey.delayInMSStr.empty())
+			delayInMSStr = std::regex_replace(delayInMSStr, std::regex("[^0-9]"), "");
+			if (delayInMSStr.empty())
 			{
-				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value");
+				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value - not set");
 				textBoxDelay->Focus();
 				return;
 			}
 
-			playbackKey.delayInMS = (uint16_t)std::stoi(playbackKey.delayInMSStr);
-			if ((playbackKey.delayInMS == 0) || (playbackKey.delayInMS > 30000))
+			uint16_t delayInMS = (uint16_t)std::stoi(delayInMSStr);
+			if ((delayInMS < 10) || (delayInMS > 60000))
 			{
-				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value");
+				errorProviderDelay->SetError(textBoxDelay, "Invalid delay value [10ms - 60000ms]");
 				textBoxDelay->Focus();
 				return;
 			}
+
+			KeySettings::PlaybackKey playbackKey(item->keyCode, delayInMS);
 
 			if (m_playbackIdx > 0)
 			{
@@ -277,11 +278,10 @@ namespace GameMacro {
 				}
 			}
 
-			playbackKey.keyCode = item->keyCode;
-			playbackKey.bCtrl   = checkBoxCtrl->Checked;
-			playbackKey.bAlt    = checkAlt->Checked;
-			playbackKey.bShift  = checkBoxShift->Checked;
-			playbackKey.bWKey   = checkBoxWindows->Checked;
+			playbackKey.bCtrl  = checkBoxCtrl->Checked;
+			playbackKey.bAlt   = checkAlt->Checked;
+			playbackKey.bShift = checkBoxShift->Checked;
+			playbackKey.bWKey  = checkBoxWindows->Checked;
 			
 			if (globalSettings.Playback_Add(m_macroKeyCode, m_playbackIdx, playbackKey))
 			{

@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-class Stopwatch final
+class Stopwatch
 {
 public:
     Stopwatch() { Stop(); }
