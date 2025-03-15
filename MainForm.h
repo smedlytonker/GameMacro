@@ -59,6 +59,7 @@ namespace GameMacro {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(MainForm::typeid));
 			this->macroList = (gcnew System::Windows::Forms::ListView());
 			this->columnkeyCode = (gcnew System::Windows::Forms::ColumnHeader());
 			this->columnKeyName = (gcnew System::Windows::Forms::ColumnHeader());
@@ -95,7 +96,7 @@ namespace GameMacro {
 			this->addMacro->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 			this->addMacro->Location = System::Drawing::Point(12, 346);
 			this->addMacro->Name = L"addMacro";
-			this->addMacro->Size = System::Drawing::Size(175, 46);
+			this->addMacro->Size = System::Drawing::Size(201, 46);
 			this->addMacro->TabIndex = 1;
 			this->addMacro->Text = L"Add Macro";
 			this->addMacro->UseVisualStyleBackColor = true;
@@ -110,6 +111,7 @@ namespace GameMacro {
 			this->Controls->Add(this->macroList);
 			this->Font = (gcnew System::Drawing::Font(L"Verdana", 13.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
+			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 			this->Margin = System::Windows::Forms::Padding(5);
 			this->Name = L"MainForm";
 			this->Text = L"GameMacro";

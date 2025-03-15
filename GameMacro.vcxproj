@@ -149,6 +149,7 @@
     <ClInclude Include="PlaybackKeyForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleIni\ConvertUTF.h" />
     <ClInclude Include="SimpleIni\SimpleIni.h" />
     <ClInclude Include="BackgroundProcessing.h" />
@@ -165,6 +166,12 @@
     <EmbeddedResource Include="PlaybackKeyForm.resx">
       <DependentUpon>PlaybackKeyForm.h</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GameMacro.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="GameMacro.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

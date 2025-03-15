@@ -61,5 +61,14 @@
     <ClInclude Include="Logging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GameMacro.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="GameMacro.ico" />
   </ItemGroup>
 </Project>
