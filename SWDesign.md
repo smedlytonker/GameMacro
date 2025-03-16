@@ -12,7 +12,9 @@ Here is a diagram showing the relationship between the pieces
 
 ![A screen shot of a computer](media/d0ea9d730f7c8eee7ec8f0eff0860672.png)
 
+
 The ‘User Interface’ and the ‘Macro Playback’ blocks run on their own thread. Because they run on their own thread I had to use a mutex to protect access to data structures in ‘Applications Settings’ block.
+
 
 ## User interface – Viewing, searching & changing macro information
 
@@ -22,9 +24,11 @@ The code that was written by me is completely contained withing the event callba
 
 The GUI runs on the main application thread.
 
+
 ## Macro playback and Input monitoring
 
 This block processes keyboard and mouse clicks and using information from the ‘Applications Settings’ determines if a macro needs to be played back and with which keyboard or mouse input.
+
 
 ## Application Settings & Logic
 
@@ -39,6 +43,7 @@ This block of code is designed to provide the following functionalities:
 
 -   Data back store for macro settings. Settings are stored to disk
 -   APIs for create, read, update, delete macros
+
 
 ## Credits:
 
