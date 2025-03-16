@@ -4,6 +4,7 @@
 
 For my final project I will be combining my love of gaming with the object-oriented programming. GameMacro is application built for gaming and allows you to setup macro key that plays back keyboard & mouse events when a macro key is pressed.
 
+
 ## Features
 
 -   Create multiple macros
@@ -12,27 +13,31 @@ For my final project I will be combining my love of gaming with the object-orien
 -   Macro can run once or be looped
 -   Macros can be saved to disk
 
+
 ## Requirements
 
 -   Runs on only ‘Windows 7’ – ‘Windows 11’
 -   Require .NET Framework 4.8 (GUI written in C++ .NET CLI)
 
+
 ## Installation
 
-### Binary Installation
+### 1. Binary Installation
 
 Download the latest binary from the [Releases Page](https://github.com/smedlytonker/GameMacro/releases). It’s the easiest way to get started.
 
-### From Source
 
--   You must have Visual Studio. Your installation of Visual Studio should have:
+### 2. From Source
+
+1.  You must have Visual Studio. Your installation of Visual Studio should have:
     -   MSVC v143 – VS 2002 C++ x64/x86 build tools
     -   MSVC v143 – VS 2022 build tools
     -   C++/CLI support for v143
--   In Visual Studio clone the project
--   Build the project
--   Place a copy of ‘Keys.ini’ that is part of the project in the executable folder. Program will shut down without a Keys.ini.
--   Launch MacroKeys.exe
+2.  In Visual Studio clone the project
+3.  Build the project
+4.  Place a copy of ‘Keys.ini’ that is part of the project in the executable folder. Program will shut down without a Keys.ini.
+5.  Launch MacroKeys.exe
+
 
 ## Screen Shots
 
